@@ -1,0 +1,117 @@
+/* pallete (45, 49, 66) (191, 192, 192) (255, 255, 255) (239, 131, 84) (79, 93, 117) */
+
+/* @font-face {
+    font-family: stormworks_font;
+    src: url("stormworks_font.ttf");
+} */
+
+body {
+    background-color: rgb(26, 26, 27);
+    margin: 0;
+    padding: 0;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+
+header {
+    background-color: rgb(63, 63, 63);
+    padding: 10px;
+    border-bottom: 5px solid black;
+    /*padding-left: 10px;*/
+}
+
+h1 {
+    text-decoration: underline;
+    text-shadow: 2px 2px black;
+    color: rgb(148, 146, 145);
+    padding: 10px 0px 5px 0;
+    margin: 0;
+    display: inline;
+}
+
+ul {
+    background-color: rgb(63, 63, 63);
+    padding-top: 10px;
+    padding-left: 20px;
+    display: inline;
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+ul li{
+    text-decoration: none;
+    list-style-type: none;
+    display: inline-flex;
+    margin-bottom: -10px;
+    /*display: inline-block;*/
+}
+
+a {
+    background-color: rgb(148, 146, 145);
+    color: black;;
+    text-decoration: none;
+    font-size: large;
+    padding: 3px 15px 10px 15px;
+    margin-bottom: 0;
+    border: 2px solid rgb(3, 3, 2);
+    border-width: 2px 2px 5px 2px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    transition-duration: 250ms;
+}
+
+a:hover {
+    background-color: rgb(211, 211, 211);
+    padding-bottom: 10px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    transition-duration: 250ms;
+}
+
+p {
+    background-color: rgb(10, 10, 10);
+    color: rgb(211, 211, 211);
+    margin: 5px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+
+
+#tools {
+    margin: 50px;
+}
+
+#canvas {
+    margin: 50px;
+    border: 2px solid white;
+}
+
+div {
+    background-color: rgb(10, 10, 10);
+    color: rgb(211, 211, 211);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 5px;
+}
+
+input {
+    background-color: rgb(148, 146, 145);
+    color: black;
+    padding: 5px;
+    border-radius: 10px;
+}
+
+img {
+    background-color: rgb(148, 146, 145);
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+#code {
+    margin: 0;
+    margin-top: 20px;
+    padding: 20px;
+    border: 2px solid white;
+}
