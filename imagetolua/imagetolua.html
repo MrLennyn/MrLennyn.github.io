@@ -7,12 +7,13 @@
     </head>
     <body>
         <header>
-            <h1>Stormworks Tools</h1>
             <ul>
                 <li><a href = "../index.html">Home</a></li>
                 <li><a href = "imagetolua.html">Image Lua Converter</a></li>
-                <li><a href = "../canvas/canvas.html">Drawing Canvas</a></li>
+                <!-- <li><a href = "../canvas/canvas.html">Drawing Canvas</a></li> -->
+                <li><a href = "../links/links.html">Links</a></li>
             </ul>
+            <h1>Image-Lua-Converter</h1>
         </header>
         <nav>
             
@@ -21,12 +22,22 @@
         <p>
             Image to Lua converter with great performance. Able to draw to tens of screens without TPS drops.
         </p>
-        <div>
-            <input type="file" id="image">
-            <br><img id="myImg" src="#">
-            <p id = "code" >Your code</p>
+        <div id = "top">
+            <div>
+                <input type="file" id="image" accept=".png">
+                <br><img id="myImg" src="#">
+            </div>
+            <div id= "info">
+                <p id = "color_count" ></p>
+                <p id = "width" ></p>
+                <p id = "height" ></p>
+            </div>
         </div>
-        <canvas id="image_canvas"></canvas>
+        <div id="codediv">
+            <div id="buttondiv">
+            </div>
+        </div>
+        <canvas id="image_canvas" hidden ></canvas>
     </body>
     <script src = "converter.js"></script>
     

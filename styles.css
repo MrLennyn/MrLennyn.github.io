@@ -21,20 +21,23 @@ header {
 }
 
 h1 {
-    text-decoration: underline;
+    border: 3px solid rgb(0, 0, 0);
     text-shadow: 2px 2px black;
-    color: rgb(148, 146, 145);
-    padding: 10px 0px 5px 0;
-    margin: 0;
-    display: inline;
+    color: rgb(199, 199, 199);
+    padding: 5px;
+    margin-right: 10px;
+    margin-bottom: 0px;
+    display:inline;
 }
 
 ul {
     background-color: rgb(63, 63, 63);
     padding-top: 10px;
-    padding-left: 20px;
+    padding-left: 5px;
     display: inline;
     margin: 0;
+
+    margin-right: 10px;
     margin-bottom: 10px;
 }
 
@@ -95,10 +98,20 @@ div {
     margin: 5px;
 }
 
+#top {
+    display: flex;
+}
+
+#info {
+    padding: 2px;
+    margin: 0;
+}
+
 input {
     background-color: rgb(148, 146, 145);
     color: black;
     padding: 5px;
+    padding-right: 32px;
     border-radius: 10px;
 }
 
@@ -109,9 +122,11 @@ img {
     border-radius: 10px;
 }
 
-#code {
+#buttondiv {
+    padding: 0;
     margin: 0;
-    margin-top: 20px;
-    padding: 20px;
-    border: 2px solid white;
+}
+
+button {
+    padding: 10px;
 }
