@@ -102,9 +102,29 @@ div {
     display: flex;
 }
 
+#imagediv {
+    padding-left: 0px;
+    padding-top: 0px;
+    margin-top: 0px;
+}
+
 #info {
     padding: 2px;
     margin: 0;
+}
+
+.helpimage {
+    background-color: black;
+    width: 250px;
+    margin: 5px;
+    padding: 0;
+}
+
+.helpimage1 {
+    background-color: black;
+    width: 400px;
+    margin: 5px;
+    padding: 0;
 }
 
 input {
