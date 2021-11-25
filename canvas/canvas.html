@@ -15,14 +15,56 @@
             </ul>
             <h1>Drawing Canvas</h1>
         </header>
-        <div id="tools">
-            COMING SOON! You can play with the canvas tho
-        </div>
-        <canvas id="canvas" width="864px" height="480px"></canvas>
 
-        <p>
-            STORMWORKS DRAWING CANVAS!
-        </p>
+        <div id="toolbox">
+            <div class="tools">
+                <label for="scale">Zoom:</label>
+                <br>
+                <input type="range" id="scale" name="scale" min="4" max="24">
+            </div>
+            <div class="tools">
+                <label for="grid">Grid:</label>
+                <br>
+                <input type="checkbox" id="grid" name="grid" checked>
+            </div>
+            <div class="tools">
+                <label for="screen"> Screen:</label>
+                <br>
+                <select id="screen">
+                  <option value="1x1">1x1</option>
+                  <option value="2x1">2x1</option>
+                  <option value="2x2">2x2</option>
+                  <option value="3x1">3x1</option>
+                  <option value="3x2">3x2</option>
+                  <option value="3x3">3x3</option>
+                  <option value="5x3">5x3</option>
+                  <option value="9x5">9x5</option>
+                </select>
+            </div>
+
+            <div class="tools">
+                <label for="color">Color:</label>
+                <br>
+                <input id="color" type="color" value="#FFFFFF" />
+            </div>
+            
+        </div>
+
+        <div id="shapes" class="shapes">
+            <input id="undo" type="image" src="../images/undo_button.png" />
+            <input id="redo" type="image" src="../images/redo_button.png" />
+            <input id="line" type="image" src="../images/line_button.png" />
+            <input id="rect" type="image" src="../images/rect_button.png" />
+            <input id="rectF" type="image" src="../images/rectF_button.png" />
+        </div>
+        
+        <div>
+            <canvas id="canvas" width="864px" height="480px"></canvas>
+        </div>
+        
+        <div id="outputCode">
+            Output Code
+        </div>
         
     </body>
     <script src = "canvas.js"></script>

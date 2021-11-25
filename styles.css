@@ -1,7 +1,7 @@
 /* pallete (45, 49, 66) (191, 192, 192) (255, 255, 255) (239, 131, 84) (79, 93, 117) */
 
 /* @font-face {
-    font-family: stormworks_font;
+    font-family: "stormworks_font";
     src: url("stormworks_font.ttf");
 } */
 
@@ -81,14 +81,6 @@ p {
 
 
 
-#tools {
-    margin: 50px;
-}
-
-#canvas {
-    margin: 50px;
-    border: 2px solid white;
-}
 
 div {
     background-color: rgb(10, 10, 10);
@@ -149,4 +141,62 @@ img {
 
 button {
     padding: 10px;
+}
+
+/* canvas tools! */
+
+#canvas {
+    margin: 5px;
+    border: 2px solid white;
+}
+
+.tools {
+    /* display: flex; */
+   /*  display: flex; */
+    padding: 0;
+    border-radius: 0;
+}
+
+#toolbox {
+    display: flex;
+    padding: 0;
+    border-radius: 10px;
+}
+
+#scale {
+    padding: 0;
+    border-radius: 0;
+}
+
+select {
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+}
+
+#color {
+    margin: 0;
+    padding: 0;
+    border: 0px;
+    border-radius: 0;
+    width: 60px;
+    height: 20px;
+}
+
+#shapes {
+    margin: 5px;
+    padding: 10px;
+}
+
+.shapes input {
+    background-color: #EFEFEF;
+    margin: 0px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.shapes input:hover {
+    background-color: #ffffff;
+    border-radius: 10px;
+    transition-duration: 250ms;
 }
