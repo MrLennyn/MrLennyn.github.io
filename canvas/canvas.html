@@ -23,14 +23,14 @@
                 <input type="range" id="scale" name="scale" min="4" max="24">
             </div>
             <div class="tools">
-                <label for="grid">Grid:</label>
+                <label for="grid" title="Enable/Disable Grid">Grid:</label>
                 <br>
-                <input type="checkbox" id="grid" name="grid" checked>
+                <input type="checkbox" id="grid" name="grid" title="Enable/Disable Grid" checked>
             </div>
             <div class="tools">
-                <label for="screen"> Screen:</label>
+                <label for="screen" title="Screen Size"> Screen:</label>
                 <br>
-                <select id="screen">
+                <select id="screen" title="Screen Size">
                   <option value="1x1">1x1</option>
                   <option value="2x1">2x1</option>
                   <option value="2x2">2x2</option>
@@ -41,29 +41,50 @@
                   <option value="9x5">9x5</option>
                 </select>
             </div>
-
-            <div class="tools">
+            <!-- <div class="tools">
                 <label for="color">Color:</label>
                 <br>
                 <input id="color" type="color" value="#FFFFFF" />
-            </div>
+            </div> -->
+            
             
         </div>
 
         <div id="shapes" class="shapes">
-            <input id="undo" type="image" src="../images/undo_button.png" />
-            <input id="redo" type="image" src="../images/redo_button.png" />
-            <input id="line" type="image" src="../images/line_button.png" />
-            <input id="rect" type="image" src="../images/rect_button.png" />
-            <input id="rectF" type="image" src="../images/rectF_button.png" />
+            <input id="undo" type="image" src="../images/undo_button.png" title="Undo"/>
+            <input id="redo" type="image" src="../images/redo_button.png" title="Redo"/>
+            <input id="line" type="image" src="../images/line_button.png" title="Line"/>
+            <input id="rect" type="image" src="../images/rect_button.png" title="Rect"/>
+            <input id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full"/>
+            <!-- <label for="color">Color:</label> -->
+            <!-- <br> -->
+            <input id="color" type="color" value="#FFFFFF" title="Color Picker"/>
         </div>
         
         <div>
             <canvas id="canvas" width="864px" height="480px"></canvas>
         </div>
         
-        <div id="outputCode">
-            Output Code
+        <div>
+            <section id="outputSet">
+
+                <input id="copy" type="image" src="../images/copy_button.png" title="Copy Code to Clipboard"/>
+                
+                <div class="tools">
+                    <label for="gamma">Color Fix:</label>
+                    <br>
+                    <input type="checkbox" id="gamma" name="gamma" title="Color Correction for SW screens (thanks XLjedi)" checked>
+                </div>
+                <div class="tools">
+                    <label for="compact">Compact:</label>
+                    <br>
+                    <input type="checkbox" id="compact" name="compact" title="Reduce the number of characters in script" checked>
+                </div>
+            </section>
+            
+            <div id="outputCode">
+                Output Code
+            </div>
         </div>
         
     </body>

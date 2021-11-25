@@ -5,8 +5,6 @@
         +-RectFull
         -Circle
         -CircleFull
-        -Triangle
-        -Triangle Full
         -Text
         -TextBox
     options:
@@ -15,7 +13,8 @@
         +-Grid toggle
         +-Undo
         +-Redo
-        -Gamma Correction
+        +-Gamma Correction
+        +-compact drawing: sc = setColor()
         -Reference Image
     
 
@@ -49,6 +48,11 @@ window.addEventListener("load", () =>{
     const rect_shape = document.getElementById("rect")
     const rectF_shape = document.getElementById("rectF")
 
+    const copy_button = document.getElementById("copy")
+    const color_fix = document.getElementById("gamma")
+    const compact = document.getElementById("compact")
+    const output = document.getElementById("outputCode")
+
     ctx.imageSmoothingEnabled = false;
 
     let pixelSize = 8
@@ -74,11 +78,9 @@ window.addEventListener("load", () =>{
 
     let redo_array = [];
 
-    let mouseDown = false
-
     let tool = "line"
     let color = "#FFFFFF"
-    let shapes = []; //[0]tool, [1]hex_color, [2,3,4,5]coordinates
+    let shapes = []; //[0]tool, [1]hex_color, [2,3,4,5]coordinates ...
 
     //grid
     function drawGrid() {
@@ -164,7 +166,7 @@ window.addEventListener("load", () =>{
         let w = Math.floor(x2)
         let h = Math.floor(y2)
 
-        console.log("line",color,x, y, w, h)
+        /* console.log("line",color,x, y, w, h) */
 
         shapes.push(tool,color,x, y, w, h)
     }
@@ -177,7 +179,7 @@ window.addEventListener("load", () =>{
         let w = Math.floor(x2-x1)+1
         let h = Math.floor(y2-y1)+1
 
-        console.log(tool,color,x, y, w, h)
+        /* console.log(tool,color,x, y, w, h) */
 
         shapes.push(tool,color,x, y, w, h)
     }
@@ -235,6 +237,14 @@ window.addEventListener("load", () =>{
     rect_shape.addEventListener("click",changeTool);
     rectF_shape.addEventListener("click",changeTool);
 
+
+    copy_button.addEventListener("click",copyText);
+    color_fix.addEventListener("change",outputCode);
+    compact.addEventListener("change",outputCode);
+
+
+
+
     document.addEventListener('keydown', function(event) {
         if (event.ctrlKey && event.key === 'z') {
             undo();
@@ -268,33 +278,6 @@ window.addEventListener("load", () =>{
 
         ctx.fillStyle = "red";
         ctx.fillRect((pixel[0]*pixelSize)+1, (pixel[1]*pixelSize)+1, pixelSize-2, pixelSize-2);
-
-        /* let s_tool = shapes[i+0];
-        let s_color = shapes[i+1];
-        let x = shapes[i+2];
-        let y = shapes[i+3];
-        let w = shapes[i+4];
-        let h = shapes[i+5];
-
-        if (mouseDown == true) {
-            if (tool == "line") {
-                drawLine(s_color,x,y,w,h) //w,h are x2,y2
-            } else if (tool == "rectF") {
-                ctx.fillStyle = s_color;
-                ctx.fillRect(x*pixelSize, y*pixelSize, w*pixelSize, h*pixelSize);
-                ctx.fill()
-            } else if (tool == "rect") {
-                ctx.fillStyle = s_color;
-    
-                ctx.fillRect(x*pixelSize, y*pixelSize, w*pixelSize, pixelSize); //top left right 
-                ctx.fillRect(x*pixelSize, (y+h-1)*pixelSize, w*pixelSize, pixelSize); //bottom left right 
-                ctx.fillRect(x*pixelSize, y*pixelSize, pixelSize, h*pixelSize); //top left down
-                ctx.fillRect((x+w-1)*pixelSize, y*pixelSize, pixelSize, h*pixelSize); //top right down
-    
-                ctx.fill()
-            }
-        } */
-        
 
         //console.log(pixel)
 
@@ -367,7 +350,7 @@ window.addEventListener("load", () =>{
             let len = shapes.length;
             redo_array.push(shapes[len-6],shapes[len-5],shapes[len-4],shapes[len-3],shapes[len-2],shapes[len-1])
             shapes.splice(len - 6, 6);
-            console.log(shapes, redo_array)
+            /* console.log(shapes, redo_array) */
             clearCanvas();
             outputCode()
             drawGrid()
@@ -391,34 +374,102 @@ window.addEventListener("load", () =>{
         redo_array = [];
     }
 
+    function hexToRgb(h) {
+        let r = 0, g = 0, b = 0;
+      
+        // 3 digits
+        if (h.length == 4) {
+            r = "0x" + h[1] + h[1];
+            g = "0x" + h[2] + h[2];
+            b = "0x" + h[3] + h[3];
+        
+        // 6 digits
+        } else if (h.length == 7) {
+            r = "0x" + h[1] + h[2];
+            g = "0x" + h[3] + h[4];
+            b = "0x" + h[5] + h[6];
+        }
+    
+        if (color_fix.checked) {
+            r = gFix(r)
+            g = gFix(g)
+            b = gFix(b)
+        }
+        
+        return +r + "," + +g + "," + +b;
+    }
+
     function outputCode() {
         //[0]tool, [1]hex_color, [2,3,4,5]coordinates
 
         //SW screen.draw funky inconsistencies:
         //Lines don't fill the end pixel. Kinda fixed by adding 0.25
         //rect goes one pixel long on h and w. Fixed by substracting 1
-        let output = document.getElementById("outputCode")
         
         let final_string = "";
+        let tool_string = "";
+        let last_color = "";
+
+        let set_color_string = "";
+        let line_string = "";
+        let rect_string = "";
+        let rectF_string = "";
+
+        if (compact.checked) {
+            set_color_string = "sc(";
+            line_string = "dl(";
+            rect_string = "dr(";
+            rectF_string = "drf(";
+
+            final_string = final_string + "s=screen<br>sc=s.setColor<br>dl=s.drawLine<br>dr=s.drawRect<br>drf=s.drawRectF<br><br>"
+            final_string = final_string + "function onDraw()<br><br>"
+
+        } else {
+
+            final_string = final_string + "function onDraw()<br><br>"
+
+            set_color_string = "screen.setColor(";
+            line_string = "screen.drawLine(";
+            rect_string = "screen.drawRect(";
+            rectF_string = "screen.drawRectF(";
+        }
+
         for (let i = 0; i < shapes.length; i += 6) {
-            let tool_string = "";
+            
+
+            let tool_type = shapes[i+0]
+            let hex_color = shapes[i+1]
             let x1 = shapes[i+2]
             let y1 = shapes[i+3]
             let x2 = shapes[i+4]
             let y2 = shapes[i+5]
 
-            if (shapes[i+0] == "line") {
-                tool_string = " screen.drawLine(" + x1 + "," + y1 + "," + (x2+0.25) + "," + (y2+0.25) + ")"
-            } else if (shapes[i+0] == "rect") {
-                tool_string = " screen.drawRect(" + x1 + "," + y1 + "," + (x2-1) + "," + (y2-1) + ")"
-            } else if (shapes[i+0] == "rectF") {
-                tool_string = " screen.drawRectF(" + x1 + "," + y1 + "," + x2 + "," + y2 + ")"
+            if (hex_color !== last_color) {
+                let color_string = set_color_string + hexToRgb(hex_color) + ")"
+                final_string = final_string + color_string + "<br>"
+                last_color = hex_color;
             }
-            final_string = final_string + tool_string + "<br />"
+
+            if (tool_type == "line") {
+                tool_string = line_string + x1 + "," + y1 + "," + (x2+0.25) + "," + (y2+0.25) + ")"
+            } else if (tool_type == "rect") {
+                tool_string = rect_string + x1 + "," + y1 + "," + (x2-1) + "," + (y2-1) + ")"
+            } else if (tool_type == "rectF") {
+                tool_string = rectF_string + x1 + "," + y1 + "," + x2 + "," + y2 + ")"
+            }
+            final_string = final_string + tool_string + "<br>"
         }
-        console.log(final_string)
+        
+        final_string = final_string + "<br>end"
         output.innerHTML = final_string
+        /* console.log(output.innerHTML) */
     }
+
+    function copyText() {
+        let copy_string = output.innerHTML.replaceAll('<br>','\n');
+        navigator.clipboard.writeText(copy_string)
+    }
+    
 
 });
 
@@ -461,4 +512,16 @@ function lerp(start, end, t) {
     return start + t * (end-start);
 }
 
+/* function hexToRgb(hex) {
+    return ['0x' + hex[1] + hex[2] | 0, '0x' + hex[3] + hex[4] | 0, '0x' + hex[5] + hex[6] | 0];
+} */
+
+
+
+let gamaFix = 1.1
+function gFix(color) { //by XLjedi
+
+    color = Math.floor(color**gamaFix/255**gamaFix*color)
+    return color
+}
 
