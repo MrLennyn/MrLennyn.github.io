@@ -41,11 +41,11 @@
                   <option value="9x5">9x5</option>
                 </select>
             </div>
-            <!-- <div class="tools">
-                <label for="color">Color:</label>
+            <div class="tools">
+                <label for="refimage" title="Enable/Disable Grid">Reference Img:</label>
                 <br>
-                <input id="color" type="color" value="#FFFFFF" />
-            </div> -->
+                <input type="file" id="refimage" name="refimage" title="Upload Reference Image" accept="image/png, image/jpeg">
+            </div>
             
             
         </div>
@@ -56,13 +56,13 @@
             <input id="line" type="image" src="../images/line_button.png" title="Line"/>
             <input id="rect" type="image" src="../images/rect_button.png" title="Rect"/>
             <input id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full"/>
-            <!-- <label for="color">Color:</label> -->
-            <!-- <br> -->
             <input id="color" type="color" value="#FFFFFF" title="Color Picker"/>
+            
         </div>
         
         <div>
             <canvas id="canvas" width="864px" height="480px"></canvas>
+            <div id="position">(0,0)</div> 
         </div>
         
         <div>

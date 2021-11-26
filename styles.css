@@ -204,6 +204,12 @@ select {
     background-color: #AC3232;
 }
 
+#position {
+    margin: 0px;
+    padding: 0px;
+    vertical-align: top;
+}
+
 #copy {
     background-color: #EFEFEF;
     width: auto;

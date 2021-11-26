@@ -27,6 +27,7 @@
     they weren't intended by the user
 */
 
+/* bugs: rectF when drawing up will be 1 short */
 
 window.addEventListener("load", () =>{
 
@@ -35,7 +36,7 @@ window.addEventListener("load", () =>{
     const canvas = document.querySelector("#canvas");
     const ctx = canvas.getContext("2d");
 
-    
+    const ref_img = document.getElementById("refimage")
 
     const scale = document.getElementById("scale")
     const grid_checkbox = document.getElementById("grid")
@@ -52,6 +53,8 @@ window.addEventListener("load", () =>{
     const color_fix = document.getElementById("gamma")
     const compact = document.getElementById("compact")
     const output = document.getElementById("outputCode")
+
+    const position_indicator = document.getElementById("position")
 
     ctx.imageSmoothingEnabled = false;
 
@@ -76,34 +79,45 @@ window.addEventListener("load", () =>{
     let startPixel = [];
     let endPixel = [];
 
+    let mouseDown = false
+    let cursorColor = "FF0000"
+
     let redo_array = [];
 
     let tool = "line"
     let color = "#FFFFFF"
     let shapes = []; //[0]tool, [1]hex_color, [2,3,4,5]coordinates ...
 
+    let last_line = [0,0,0,0];
+    let last_rectF = [0,0,0,0];
+    let last_rect = [0,0,0,0];
+
     //grid
     function drawGrid() {
         if (grid_checkbox.checked) {
-            ctx.lineWidth = 1;
-            ctx.fillStyle = 'transparent;'
-            ctx.strokeStyle = '#303030';
+            ctx.fillStyle = '#303030';
             for (var x = 0; x < screenWidth; x++) {
-                for (var y = 0; y < screenHeight; y++) {
-                    ctx.strokeRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-                }
+                ctx.fillRect(x * pixelSize, 0, 2 , canvas.height)
             }
+            for (var y = 0; y < screenHeight; y++) {
+                ctx.fillRect(0, y * pixelSize, canvas.width , 2)
+            }
+
         } else {
-            clearCanvas()
+            //clearCanvas()
         }
             
     }
     drawGrid()
 
     function startPosition(e){
-        mouseDown = true;
+
+        last_line = [0,0,0,0];
+        last_rectF = [0,0,0,0];
 
         startPixel = [Math.floor(e.offsetX/pixelSize), Math.floor(e.offsetY/pixelSize)];
+
+        mouseDown = true;
 
         clearRedo()
         //console.log(startPixel);
@@ -124,17 +138,7 @@ window.addEventListener("load", () =>{
         let pos = [];
 
         if (tool == "rect" || tool == "rectF") {
-            if (x1 > x2 && y1 > y2) { //this is for making the top left pixel be the first one
-                pos = [x2,y2,x1,y1]
-            } else if (x1 < x2 && y1 < y2) {
-                pos = [x1,y1,x2,y2]
-            } else if (x1 < x2 && y1 > y2) {
-                pos = [x1,y2,x2,y1]
-            } else if (x1 > x2 && y1 < y2) {
-                pos = [x2,y1,x1,y2]
-            } else {
-                pos = [x1,y1,x2,y2]
-            }
+            pos = [smaller(x1,x2),smaller(y1,y2),bigger(x1,x2),bigger(y1,y2)]
         } else if (tool == "line") {
             if (x1 > x2 || y1 > y2) {
                 pos = [x2,y2,x1,y1]
@@ -158,33 +162,12 @@ window.addEventListener("load", () =>{
         outputCode()
     }
 
-    function pushLine(x1,y1,x2,y2) {
-        ctx.fillStyle = color;
-
-        let x = Math.floor(x1)
-        let y = Math.floor(y1)
-        let w = Math.floor(x2)
-        let h = Math.floor(y2)
-
-        /* console.log("line",color,x, y, w, h) */
-
-        shapes.push(tool,color,x, y, w, h)
-    }
-
-    function pushRectF(x1,y1,x2,y2) { //startX,Y,endX,Y
-        ctx.fillStyle = color;
-
-        let x = Math.floor(x1)
-        let y = Math.floor(y1)
-        let w = Math.floor(x2-x1)+1
-        let h = Math.floor(y2-y1)+1
-
-        /* console.log(tool,color,x, y, w, h) */
-
-        shapes.push(tool,color,x, y, w, h)
-    }
-
     function draw(e) { 
+
+        clearCanvas()
+        drawRefImage()
+        drawGrid()
+
         for (var i = 0; i < shapes.length; i += 6) { //[0]tool, [1]hex_color, [2,3,4,5]coordinates
             let s_tool = shapes[i+0];
             let s_color = shapes[i+1];
@@ -214,9 +197,39 @@ window.addEventListener("load", () =>{
         //ctx.fillRect(cursorPixel[0]*pixelSize, cursorPixel[1]*pixelSize, pixelSize, pixelSize);
     }
 
-    
+    function pushLine(x1,y1,x2,y2) {
+        ctx.fillStyle = color;
 
-    
+        let x = Math.floor(x1)
+        let y = Math.floor(y1)
+        let w = Math.floor(x2)
+        let h = Math.floor(y2)
+
+        /* console.log("line",color,x, y, w, h) */
+
+        shapes.push(tool,color,x, y, w, h)
+    }
+
+    function pushRectF(x1,y1,x2,y2) { //startX,Y,endX,Y
+        ctx.fillStyle = color;
+
+        let x = Math.floor(x1)
+        let y = Math.floor(y1)
+        let w = Math.floor(x2-x1)+1
+        let h = Math.floor(y2-y1)+1
+
+        if (tool == "rect") {
+            if (w == 1 && h == 1) {
+                return
+            }
+        }
+            
+
+        console.log(tool,color,x, y, w, h)
+
+        shapes.push(tool,color,x, y, w, h)
+    }
+
 
     //Event Listeners
     window.addEventListener("resize", resized)
@@ -228,9 +241,10 @@ window.addEventListener("load", () =>{
     scale.addEventListener("change",changeScale);
     grid_checkbox.addEventListener("change",changeGrid);
     screen_select.addEventListener("change",changeScreenSize);
-    color_select.addEventListener("change",changeColor);
+    ref_img.addEventListener("change",imgLoad);
 
-    
+
+    color_select.addEventListener("change",changeColor);
     undo_button.addEventListener("click",undo);
     redo_button.addEventListener("click",redo);
     line_shape.addEventListener("click",changeTool);
@@ -265,12 +279,15 @@ window.addEventListener("load", () =>{
             ctx.fillRect(x*pixelSize, y*pixelSize, pixelSize, pixelSize);
         }
     }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     let lastPixel = [0,0];
     function cursor(e) {
         draw(e)
-
-
         
         ctx.clearRect((lastPixel[0]*pixelSize)+1, (lastPixel[1]*pixelSize)+1, pixelSize-2, pixelSize-2);
 
@@ -279,12 +296,113 @@ window.addEventListener("load", () =>{
         ctx.fillStyle = "red";
         ctx.fillRect((pixel[0]*pixelSize)+1, (pixel[1]*pixelSize)+1, pixelSize-2, pixelSize-2);
 
+        position_indicator.innerHTML = "(" + pixel[0] + "," + pixel[1] + ")"
         //console.log(pixel)
+
+        if (mouseDown) {
+            if (tool == "line") {
+                cursorLine(pixel)
+            } else if (tool == "rect") {
+                cursorRect(pixel)
+            } else if (tool == "rectF") {
+                cursorRectF(pixel)
+            }
+        }
+        
 
         lastPixel = pixel
         
     }
 
+    
+    function cursorLine(pixel) {
+        ctx.fillStyle = cursorColor;
+        
+        let x1 = startPixel[0]
+        let y1 = startPixel[1]
+        let x2 = pixel[0]
+        let y2 = pixel[1]
+
+        //ctx.clearRect((lastPixel[0]*pixelSize)+1, (lastPixel[1]*pixelSize)+1, pixelSize-2, pixelSize-2);
+        //clearing last line
+        for (let step = 0; step < last_line.length; step++) {
+            let x = last_line[step][0]
+            let y = last_line[step][1]
+            ctx.clearRect(x*pixelSize+1, y*pixelSize+1, pixelSize-2, pixelSize-2);
+        }
+
+
+        //drawing new line
+        let point1 = [x1,y1]
+        let point2 = [x2,y2]
+        let the_line = line(point1, point2)
+        for (let step = 0; step < the_line.length; step++) {
+            let x = the_line[step][0]
+            let y = the_line[step][1]
+            ctx.fillRect(x*pixelSize+1, y*pixelSize+1, pixelSize-2, pixelSize-2);
+        }
+
+        last_line = the_line
+    }
+
+    
+    function cursorRectF(pixel) {
+        let x1 = smaller(startPixel[0],pixel[0])
+        let y1 = smaller(startPixel[1],pixel[1])
+        let x2 = bigger(startPixel[0],pixel[0])
+        let y2 = bigger(startPixel[1],pixel[1])
+
+        let w = Math.floor(x2-x1)+1
+        let h = Math.floor(y2-y1)+1
+
+        ctx.clearRect(last_rectF[0]*pixelSize, last_rectF[1]*pixelSize, last_rectF[2]*pixelSize, last_rectF[3]*pixelSize);
+
+        ctx.fillStyle = cursorColor;
+        ctx.fillRect(x1*pixelSize, y1*pixelSize, w*pixelSize, h*pixelSize);
+        ctx.fill();
+
+        last_rectF = [x1,y1,w,h];
+    }
+
+    function cursorRect(pixel) {
+
+        let x1 = smaller(startPixel[0],pixel[0])
+        let y1 = smaller(startPixel[1],pixel[1])
+        let x2 = bigger(startPixel[0],pixel[0])
+        let y2 = bigger(startPixel[1],pixel[1])
+
+        let w = Math.floor(x2-x1)+1
+        let h = Math.floor(y2-y1)+1
+
+        ctx.fillStyle = cursorColor;
+
+        ctx.clearRect(last_rect[0]*pixelSize, last_rect[1]*pixelSize, last_rect[2]*pixelSize, pixelSize); //top left right 
+        ctx.clearRect(last_rect[0]*pixelSize, (last_rect[1]+last_rect[3]-1)*pixelSize, last_rect[2]*pixelSize, pixelSize); //bottom left right 
+        ctx.clearRect(last_rect[0]*pixelSize, last_rect[1]*pixelSize, pixelSize, last_rect[3]*pixelSize); //top left down
+        ctx.clearRect((last_rect[0]+last_rect[2]-1)*pixelSize, last_rect[1]*pixelSize, pixelSize, last_rect[3]*pixelSize); //top right down
+
+        ctx.fillRect(x1*pixelSize, y1*pixelSize, w*pixelSize, pixelSize); //top left right 
+        ctx.fillRect(x1*pixelSize, (y1+h-1)*pixelSize, w*pixelSize, pixelSize); //bottom left right 
+        ctx.fillRect(x1*pixelSize, y1*pixelSize, pixelSize, h*pixelSize); //top left down
+        ctx.fillRect((x1+w-1)*pixelSize, y1*pixelSize, pixelSize, h*pixelSize); //top right down
+
+        last_rect = [x1,y1,w,h];
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    var img = new Image();
+    function imgLoad() {
+        img.src = URL.createObjectURL(this.files[0]);
+        img.onload = drawRefImage;
+    }
+
+    function drawRefImage() {
+        if (img) {
+            ctx.drawImage(img, 0, 0, screenWidth, screenHeight, 0, 0, screenWidth * pixelSize, screenHeight * pixelSize);
+        }
+    }
 
     function changeScale() {
         pixelSize = scale.value
@@ -292,12 +410,12 @@ window.addEventListener("load", () =>{
         canvas.width = screenSizeW*pixelSize;
         canvas.height = screenSizeH*pixelSize;
 
-        drawGrid()
+        //drawGrid()
         draw()
     }
 
     function changeGrid() {
-        drawGrid()
+        //drawGrid()
         draw()
     }
 
@@ -313,7 +431,7 @@ window.addEventListener("load", () =>{
         canvas.width = screenSizeW*pixelSize;
         canvas.height = screenSizeH*pixelSize;
 
-        drawGrid()
+        //drawGrid()
         draw()
     }
 
@@ -353,7 +471,7 @@ window.addEventListener("load", () =>{
             /* console.log(shapes, redo_array) */
             clearCanvas();
             outputCode()
-            drawGrid()
+            //drawGrid()
             draw();
         }
     }
@@ -365,7 +483,7 @@ window.addEventListener("load", () =>{
             redo_array.splice(redo_array.length - 6, 6);
             clearCanvas();
             outputCode()
-            drawGrid()
+            //drawGrid()
             draw();
         }
     }
@@ -512,16 +630,26 @@ function lerp(start, end, t) {
     return start + t * (end-start);
 }
 
-/* function hexToRgb(hex) {
-    return ['0x' + hex[1] + hex[2] | 0, '0x' + hex[3] + hex[4] | 0, '0x' + hex[5] + hex[6] | 0];
-} */
-
-
-
 let gamaFix = 1.1
 function gFix(color) { //by XLjedi
 
     color = Math.floor(color**gamaFix/255**gamaFix*color)
     return color
+}
+
+function bigger(x,y) {
+    if (x >= y) {
+        return x
+    } else if (y > x) {
+        return y
+    }
+}
+
+function smaller(x,y) {
+    if (x <= y) {
+        return x
+    } else if (y < x) {
+        return y
+    }
 }
 
