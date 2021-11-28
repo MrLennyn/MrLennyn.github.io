@@ -188,9 +188,26 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                         }
                     }
                 }
+
+                
             }
             /* console.log("arrayFinal")
             console.log(arrayFinal) */
+
+             //A Hack: when img is only one color, array comes out empty. Here we make a single square for the whole img to fix that. 
+            if (arrayFinal.length == 0) {
+                let r = gFix(imgdata.data[0]);
+                let g = gFix(imgdata.data[1]);
+                let b = gFix(imgdata.data[2]);
+                let a = imgdata.data[3];
+
+                console.log(img_width,img_height)
+                lulalala = [r,g,b,a,0,0,img_width,img_height]
+                //arrayFinal = [r,g,b,a,0,0,img_width,img_height]
+                arrayFinal.push([r,g,b,a,0,0,img_width,img_height])
+                console.log(arrayFinal)
+                
+            }
 
             //outputing to html
             outputString = ""
@@ -199,6 +216,8 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                 outputString = outputString + "{" + arrayFinal[k].join() + "}" + ","
             }
 
+            
+            console.log(arrayFinal)
             let renderString = " function onDraw() for i=1,#p do s.setColor(p[i][1],p[i][2],p[i][3],p[i][4]) for w=5,#p[i],4 do s.drawRectF(p[i][w],p[i][w+1],p[i][w+2],p[i][w+3]) end end end"
             outputStringArray = []
             //script division: 4096
@@ -262,6 +281,7 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                 console.log("fits: " + fits + "+ scripts") */
                 /* console.log("carry over final")
                 console.log(carryOverArray) */
+
                 //output multiple scripts to html
                 for (n = 0; n < outputStringArray.length; n++) {
                     var element = document.createElement("button");
@@ -284,9 +304,10 @@ document.querySelector('input[type="file"]').addEventListener('change', function
             document.getElementById("width").innerHTML = "Width: " + canvas.width
             document.getElementById("height").innerHTML = "Height: " + canvas.height
 
+            
 
-            /* console.log("outputString")
-            console.log(outputString) */
+            console.log("outputString")
+            console.log(outputString)
 
             
         } //end of onload

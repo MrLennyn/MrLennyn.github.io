@@ -16,6 +16,7 @@
         +-Gamma Correction
         +-compact drawing: sc = setColor()
         -Reference Image
+        -funtion mode: make it do +x and +y
     
 
     Drawing and shapes:
@@ -96,6 +97,7 @@ window.addEventListener("load", () =>{
     function drawGrid() {
         if (grid_checkbox.checked) {
             ctx.fillStyle = '#303030';
+            
             for (var x = 0; x < screenWidth; x++) {
                 ctx.fillRect(x * pixelSize, 0, 2 , canvas.height)
             }
@@ -193,7 +195,7 @@ window.addEventListener("load", () =>{
                 ctx.fill()
             }
         }
-        
+
         //ctx.fillRect(cursorPixel[0]*pixelSize, cursorPixel[1]*pixelSize, pixelSize, pixelSize);
     }
 
@@ -543,7 +545,6 @@ window.addEventListener("load", () =>{
             final_string = final_string + "function onDraw()<br><br>"
 
         } else {
-
             final_string = final_string + "function onDraw()<br><br>"
 
             set_color_string = "screen.setColor(";
@@ -563,6 +564,7 @@ window.addEventListener("load", () =>{
             let y2 = shapes[i+5]
 
             if (hex_color !== last_color) {
+                /* let color_string = set_color_string + hexToRgb(hex_color) + ")" */
                 let color_string = set_color_string + hexToRgb(hex_color) + ")"
                 final_string = final_string + color_string + "<br>"
                 last_color = hex_color;
@@ -653,3 +655,37 @@ function smaller(x,y) {
     }
 }
 
+/* ctx.fillStyle = "white";
+
+        function drawCircle(centerX, centerY, radius) {
+            //https://stackoverflow.com/questions/1022178/how-to-make-a-circle-on-a-grid
+            d = 3 - (2 * radius);
+            x = 0;
+            y = radius;
+        
+            do {
+                ctx.fillRect((centerX + x)*pixelSize, (centerY + y)*pixelSize, pixelSize, pixelSize);
+                ctx.fillRect((centerX + x)*pixelSize, (centerY - y)*pixelSize, pixelSize, pixelSize);
+                ctx.fillRect((centerX - x)*pixelSize, (centerY + y)*pixelSize, pixelSize, pixelSize);
+                ctx.fillRect((centerX - x)*pixelSize, (centerY - y)*pixelSize, pixelSize, pixelSize);
+                ctx.fillRect((centerX + y)*pixelSize, (centerY + x)*pixelSize, pixelSize, pixelSize);
+                ctx.fillRect((centerX + y)*pixelSize, (centerY - x)*pixelSize, pixelSize, pixelSize);
+                ctx.fillRect((centerX - y)*pixelSize, (centerY + x)*pixelSize, pixelSize, pixelSize);
+                ctx.fillRect((centerX - y)*pixelSize, (centerY - x)*pixelSize, pixelSize, pixelSize);
+
+                if (d < 0) {
+                    d = d + (4 * x) + 12;
+                } else {
+                    d = d + 4 * (x - y) + 10;
+                    y--;
+                }
+                x++;
+            } while (x <= y);
+        }
+
+        drawCircle(40, 40, 5)
+        drawCircle(40, 40, 9)
+        drawCircle(40, 40, 15)
+        drawCircle(40, 40, 25)
+        drawCircle(40, 40, 30)
+ */
