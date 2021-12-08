@@ -287,7 +287,6 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                     var element = document.createElement("button");
                     element.appendChild(document.createTextNode('copy script ' + (n + 1) ));
                     document.getElementById('buttondiv').appendChild(element);
-
                 }
 
                 //output single script to html

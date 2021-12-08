@@ -53,6 +53,7 @@ window.addEventListener("load", () =>{
     const copy_button = document.getElementById("copy")
     const color_fix = document.getElementById("gamma")
     const compact = document.getElementById("compact")
+    const function_mode = document.getElementById("function mode")
     const output = document.getElementById("outputCode")
 
     const position_indicator = document.getElementById("position")
@@ -70,7 +71,7 @@ window.addEventListener("load", () =>{
     canvas.width = screenSizeW*pixelSize;
     canvas.height = screenSizeH*pixelSize;
 
-
+    function_mode.checked = false
     
     
     
@@ -257,7 +258,7 @@ window.addEventListener("load", () =>{
     copy_button.addEventListener("click",copyText);
     color_fix.addEventListener("change",outputCode);
     compact.addEventListener("change",outputCode);
-
+    function_mode.addEventListener("change",outputCode);
 
 
 
@@ -540,12 +541,21 @@ window.addEventListener("load", () =>{
             line_string = "dl(";
             rect_string = "dr(";
             rectF_string = "drf(";
-
+            
             final_string = final_string + "s=screen<br>sc=s.setColor<br>dl=s.drawLine<br>dr=s.drawRect<br>drf=s.drawRectF<br><br>"
-            final_string = final_string + "function onDraw()<br><br>"
-
+            if (function_mode.checked) {
+                final_string = final_string + "function onDraw()<br><br>shape(0,0)<br><br>end<br><br>function shape(x,y)<br><br>"
+            } else {
+                final_string = final_string + "function onDraw()<br><br>"
+            }
+            
         } else {
-            final_string = final_string + "function onDraw()<br><br>"
+            if (function_mode.checked) {
+                final_string = final_string + "function onDraw()<br><br>shape(0,0)<br><br>end<br><br>function shape(x,y)<br><br>"
+            } else {
+                final_string = final_string + "function onDraw()<br><br>"
+            }
+            
 
             set_color_string = "screen.setColor(";
             line_string = "screen.drawLine(";
@@ -571,11 +581,23 @@ window.addEventListener("load", () =>{
             }
 
             if (tool_type == "line") {
-                tool_string = line_string + x1 + "," + y1 + "," + (x2+0.25) + "," + (y2+0.25) + ")"
+                if (function_mode.checked) {
+                    tool_string = line_string + x1 + "+x," + y1 + "+y," + (x2+0.25) + "+x," + (y2+0.25) + "+y)"
+                } else {
+                    tool_string = line_string + x1 + "," + y1 + "," + (x2+0.25) + "," + (y2+0.25) + ")"
+                }
             } else if (tool_type == "rect") {
-                tool_string = rect_string + x1 + "," + y1 + "," + (x2-1) + "," + (y2-1) + ")"
+                if (function_mode.checked) {
+                    tool_string = rect_string + x1 + "+x," + y1 + "+y," + (x2-1) + "," + (y2-1) + ")"
+                } else {
+                    tool_string = rect_string + x1 + "," + y1 + "," + (x2-1) + "," + (y2-1) + ")"
+                }
             } else if (tool_type == "rectF") {
-                tool_string = rectF_string + x1 + "," + y1 + "," + x2 + "," + y2 + ")"
+                if (function_mode.checked) {
+                    tool_string = rectF_string + x1 + "+x," + y1 + "+y," + x2 + "," + y2 + ")"
+                } else {
+                    tool_string = rectF_string + x1 + "," + y1 + "," + x2 + "," + y2 + ")"
+                }
             }
             final_string = final_string + tool_string + "<br>"
         }
@@ -592,6 +614,12 @@ window.addEventListener("load", () =>{
     
 
 });
+
+window.onbeforeunload = e => {
+    var dialogText = 'Do you really want to leave this site?';
+    e.returnValue = dialogText;
+    return dialogText;
+};
 
 function resized() {
     let zoom = (( window.outerWidth - 10 ) / window.innerWidth) * 100;
