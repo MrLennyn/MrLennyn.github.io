@@ -15,8 +15,8 @@
         +-Redo
         +-Gamma Correction
         +-compact drawing: sc = setColor()
-        -Reference Image
-        -funtion mode: make it do +x and +y
+        +-Reference Image
+        +-funtion mode: make it do +x and +y
     
 
     Drawing and shapes:
@@ -49,6 +49,7 @@ window.addEventListener("load", () =>{
     const line_shape = document.getElementById("line")
     const rect_shape = document.getElementById("rect")
     const rectF_shape = document.getElementById("rectF")
+    const eraser = document.getElementById("eraser")
 
     const copy_button = document.getElementById("copy")
     const color_fix = document.getElementById("gamma")
@@ -85,6 +86,7 @@ window.addEventListener("load", () =>{
     let cursorColor = "FF0000"
 
     let redo_array = [];
+    let eraser_array = [];
 
     let tool = "line"
     let color = "#FFFFFF"
@@ -123,7 +125,9 @@ window.addEventListener("load", () =>{
         mouseDown = true;
 
         clearRedo()
-        //console.log(startPixel);
+        if (tool != "eraser") {
+            eraser_array = [];
+        }
         
     }
     
@@ -131,7 +135,6 @@ window.addEventListener("load", () =>{
         mouseDown = false;
 
         endPixel = [Math.floor(e.offsetX/pixelSize), Math.floor(e.offsetY/pixelSize)];
-        /* console.log(endPixel); */
 
         let x1 = startPixel[0];
         let y1 = startPixel[1];
@@ -159,6 +162,8 @@ window.addEventListener("load", () =>{
             pushRectF(pos[0],pos[1],pos[2],pos[3]) //drawRectF works for both types of rect
         } else if (tool == "rectF") {
             pushRectF(pos[0],pos[1],pos[2],pos[3])
+        } else if (tool == "eraser") {
+            erase(pos[0],pos[1])
         }
         
         draw(e);
@@ -253,6 +258,7 @@ window.addEventListener("load", () =>{
     line_shape.addEventListener("click",changeTool);
     rect_shape.addEventListener("click",changeTool);
     rectF_shape.addEventListener("click",changeTool);
+    eraser.addEventListener("click",changeTool);
 
 
     copy_button.addEventListener("click",copyText);
@@ -309,8 +315,10 @@ window.addEventListener("load", () =>{
                 cursorRect(pixel)
             } else if (tool == "rectF") {
                 cursorRectF(pixel)
-            }
-        }
+            } 
+        } else if (tool == "eraser") {
+            cursorErase(pixel)
+        } 
         
 
         lastPixel = pixel
@@ -392,9 +400,57 @@ window.addEventListener("load", () =>{
         last_rect = [x1,y1,w,h];
     }
 
+    function cursorErase(pixel) {
+
+        x = pixel[0]
+        y = pixel[1]
+
+        for (let i = shapes.length; i >= 0; i -= 6) {
+
+            let tool_type = shapes[i+0]
+            let hex_color = shapes[i+1]
+            let x1 = shapes[i+2]
+            let y1 = shapes[i+3]
+            let x2 = shapes[i+4]
+            let y2 = shapes[i+5]
+
+            if (insideRect(x,y,x1,y1,x2,y2)) {
+                
+                
+                if (tool_type == "rectF") {
+                    ctx.fillStyle = cursorColor;
+                    ctx.fillRect(x1*pixelSize, y1*pixelSize, x2*pixelSize, y2*pixelSize);
+                    ctx.fill()
+                    break
+                } else if (tool_type == "rect") {
+                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
+                    ctx.fillStyle = cursorColor;
+    
+                    ctx.fillRect(x1*pixelSize, y1*pixelSize, x2*pixelSize, pixelSize); //top left right 
+                    ctx.fillRect(x1*pixelSize, (y1+y2-1)*pixelSize, x2*pixelSize, pixelSize); //bottom left right 
+                    ctx.fillRect(x1*pixelSize, y1*pixelSize, pixelSize, y2*pixelSize); //top left down
+                    ctx.fillRect((x1+x2-1)*pixelSize, y1*pixelSize, pixelSize, y2*pixelSize); //top right down
+    
+                    ctx.fill()
+                    break
+                    }
+                }
+            } 
+            
+            if (tool_type == "line") {
+                if (insideLine(x,y,x1,y1,x2,y2)) {
+                    drawLine(cursorColor,x1,y1,x2,y2)
+                    break
+                }
+            }
+            
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     var img = new Image();
     function imgLoad() {
         img.src = URL.createObjectURL(this.files[0]);
@@ -453,6 +509,7 @@ window.addEventListener("load", () =>{
         document.getElementById("line").style.backgroundColor = "#EFEFEF"
         document.getElementById("rect").style.backgroundColor = "#EFEFEF"
         document.getElementById("rectF").style.backgroundColor = "#EFEFEF"
+        document.getElementById("eraser").style.backgroundColor = "#EFEFEF"
 
         if (tool == "line") {
             document.getElementById("line").style.backgroundColor = "#ac3232"
@@ -460,6 +517,8 @@ window.addEventListener("load", () =>{
             document.getElementById("rect").style.backgroundColor = "#ac3232"
         } else if (tool == "rectF") {
             document.getElementById("rectF").style.backgroundColor = "#ac3232"
+        } else if (tool == "eraser") {
+            document.getElementById("eraser").style.backgroundColor = "#ac3232"
         }
 
         
@@ -467,14 +526,20 @@ window.addEventListener("load", () =>{
     }
 
     function undo() {
-        if (shapes.length) {
+        if (eraser_array.length) {
+            console.log(eraser_array)
+            let len = eraser_array.length;
+            shapes.push(eraser_array[len-6],eraser_array[len-5],eraser_array[len-4],eraser_array[len-3],eraser_array[len-2],eraser_array[len-1])
+            eraser_array.splice(len - 6, 6);
+            clearCanvas();
+            outputCode();
+            draw();
+        } else if (shapes.length) {
             let len = shapes.length;
             redo_array.push(shapes[len-6],shapes[len-5],shapes[len-4],shapes[len-3],shapes[len-2],shapes[len-1])
             shapes.splice(len - 6, 6);
-            /* console.log(shapes, redo_array) */
             clearCanvas();
-            outputCode()
-            //drawGrid()
+            outputCode();
             draw();
         }
     }
@@ -485,9 +550,44 @@ window.addEventListener("load", () =>{
             shapes.push(redo_array[len-6],redo_array[len-5],redo_array[len-4],redo_array[len-3],redo_array[len-2],redo_array[len-1])
             redo_array.splice(redo_array.length - 6, 6);
             clearCanvas();
-            outputCode()
-            //drawGrid()
+            outputCode();
             draw();
+        }
+    }
+
+    function erase(x,y) {
+
+        for (let i = shapes.length; i >= 0; i -= 6) {
+            
+            let tool_type = shapes[i+0]
+            let hex_color = shapes[i+1]
+            let x1 = shapes[i+2]
+            let y1 = shapes[i+3]
+            let x2 = shapes[i+4]
+            let y2 = shapes[i+5]
+
+            if (tool_type == "line") {
+                if (insideLine(x,y,x1,y1,x2,y2)) {
+                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
+                    console.log("asdas",eraser_array)
+                    shapes.splice(i, 6)
+                    break
+                }
+            } else if (tool_type == "rect") {
+                if (insideRect(x,y,x1,y1,x2,y2)) {
+                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
+                        eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
+                        shapes.splice(i, 6)
+                        break
+                    }
+                }
+            } else if (tool_type == "rectF") {
+                if (insideRect(x,y,x1,y1,x2,y2)) {
+                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
+                    shapes.splice(i, 6)
+                    break
+                }
+            }
         }
     }
 
@@ -632,6 +732,8 @@ function resized() {
 //helper functions for line drawing
 //https://www.redblobgames.com/grids/line-drawing.html
 
+
+
 function line(p0, p1) {
     let points = [];
     let N = diagonal_distance(p0, p1);
@@ -680,6 +782,25 @@ function smaller(x,y) {
         return x
     } else if (y < x) {
         return y
+    }
+}
+
+
+function insideRect(x,y,rx,ry,w,h) {
+    if (x >= rx && x < rx+w && y >= ry && y < ry+h) {
+        return true;
+    }
+    return false;
+}
+
+function insideLine(x,y,x1,y1,x2,y2) {
+    let point1 = [x1,y1]
+    let point2 = [x2,y2]
+    let the_line = line(point1, point2)
+    for (let step = 0; step < the_line.length; step++) {
+        if (x == the_line[step][0] && y == the_line[step][1]) {
+            return true
+        }
     }
 }
 
