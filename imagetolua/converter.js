@@ -201,11 +201,11 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                 let b = gFix(imgdata.data[2]);
                 let a = imgdata.data[3];
 
-                console.log(img_width,img_height)
+                //console.log(img_width,img_height)
                 lulalala = [r,g,b,a,0,0,img_width,img_height]
                 //arrayFinal = [r,g,b,a,0,0,img_width,img_height]
                 arrayFinal.push([r,g,b,a,0,0,img_width,img_height])
-                console.log(arrayFinal)
+                //console.log(arrayFinal)
                 
             }
 
@@ -217,11 +217,15 @@ document.querySelector('input[type="file"]').addEventListener('change', function
             }
 
             
-            console.log(arrayFinal)
+            //console.log(arrayFinal)
+            
             let renderString = " function onDraw() for i=1,#p do s.setColor(p[i][1],p[i][2],p[i][3],p[i][4]) for w=5,#p[i],4 do s.drawRectF(p[i][w],p[i][w+1],p[i][w+2],p[i][w+3]) end end end"
+            let limit = 4096 - renderString.length - 15
             outputStringArray = []
             //script division: 4096
-            if (outputString.length + renderString.length > 4096) {
+            //if (outputString.length + renderString.length > 4096) { //if output needs to be divided
+            if (outputString.length > limit) {  
+
                 let tableSize = outputString.length;
                 let fits = Math.floor((outputString.length + renderString.length) / (4096-renderString.length));
 
@@ -233,10 +237,10 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                 for (k = 0; k < arrayFinal.length; k++) {
                     let arrayColorLength = arrayFinal[k].join().length
 
-                    console.log(arrayFinal[k].join().length)
-                    console.log(arrayFinal[k][0],arrayFinal[k][1],arrayFinal[k][2],arrayFinal[k][3])
+                    //console.log("color", arrayFinal[k][0], arrayFinal[k][1], arrayFinal[k][2], arrayFinal[k][3],)
+                    //console.log(arrayFinal[k])
 
-                    if (arrayColorLength > 4096-renderString.length-12) {
+                    if (arrayColorLength > limit) { //check for too big of an image
                         console.log("Color String Error - color array bigger than 4096")
 
                         var element = document.createElement("h1");
@@ -246,43 +250,76 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                         break
                     }
 
-                    if ((outputString.length + arrayColorLength) < (4096-renderString.length-12)) {
+                    //console.log("OUTPUT STRING LENGTH" + outputString.length)
+                    if (outputString.length + arrayColorLength < limit) { //if it still fits in a script
                         
-                        outputString = outputString + "{" + arrayFinal[k].join() + "}" + ",";
+                        outputString = outputString + "{" + arrayFinal[k].join() + "}" + ","; //then put that color string on the output
 
                         if (carryOver) {
                             for (z = 0; z < carryOverArray.length; z++) {
-                                if ((outputString.length + carryOverArray[z].length) < (4096-renderString.length-12)) {
+                                if (outputString.length + carryOverArray[z].join().length < limit) { //if carry over fits
+
                                     outputString = outputString + "{" + carryOverArray[z].join() + "}" + ",";
-                                
+                                    
                                     console.log("CARRY OVER :")
                                     console.log(carryOverArray[z])
-                                    carryOver = false
                                     carryOverArray.splice(z)
+                                    if (carryOverArray.length == 0) {
+                                        carryOver = false
+                                    }
                                 }
-                            } 
+                            }
                         }
-                        if (arrayFinal.length == k+1) {
+                        //console.log("CARRY OVER :", carryOverArray)
+                        if (arrayFinal.length == k+1) { //if it is the last array string
+                            if (carryOver) {
+                                console.log("LAST CARRY OVER")
+                            }
+                            carryOver = false
                             outputString = "s=screen p={" + outputString + "}";
-                            outputStringArray.push(outputString+renderString)
+                            outputStringArray.push(outputString + renderString)
                             console.log("added last");
+                            console.log("output string last:" + outputString.length);
                             outputString = ""
                         }
-                    } else {
+                    } else { //if the color is too big for the string, then its a carry over
                         carryOver = true
                         carryOverArray.push(arrayFinal[k])
                         outputString = "s=screen p={" + outputString + "}";
-                        outputStringArray.push(outputString+renderString)
-                        console.log("added");
+                        outputStringArray.push(outputString + renderString)
+                        console.log("added carry over");
+                        //console.log("output string next:" + outputString.length);
+                        //console.log("added " + arrayFinal[k].length)
                         outputString = ""
                     }
-                }
-                /* console.log(outputStringArray)
-                console.log("fits: " + fits + "+ scripts") */
-                /* console.log("carry over final")
-                console.log(carryOverArray) */
+                    if (arrayFinal.length == k+1) { //if it is the last array string and there is a carry over last
+                        if (carryOver) {
+                            for (z = 0; z < carryOverArray.length; z++) {
+                                if (outputString.length + carryOverArray[z].join().length < limit) { //if carry over fits
 
+                                    outputString = outputString + "{" + carryOverArray[z].join() + "}" + ",";
+                                    
+                                    console.log("CARRY OVER :")
+                                    console.log(carryOverArray[z])
+                                    carryOverArray.splice(z)
+                                    if (carryOverArray.length == 0) {
+                                        carryOver = false
+                                    }
+                                }
+                            }
+                            console.log("LAST CARRY OVER")
+                            carryOver = false
+                            outputString = "s=screen p={" + outputString + "}";
+                            outputStringArray.push(outputString + renderString)
+                            console.log("added last");
+                            console.log("output string last:" + outputString.length);
+                            outputString = ""
+                        }
+                        
+                    }
+                }
                 //output multiple scripts to html
+                //console.log(outputStringArray.length)
                 for (n = 0; n < outputStringArray.length; n++) {
                     var element = document.createElement("button");
                     element.appendChild(document.createTextNode('copy script ' + (n + 1) ));
@@ -318,13 +355,12 @@ document.querySelector('input[type="file"]').addEventListener('change', function
     }
     
     document.addEventListener('click', function(evt) {
-        /* console.log(evt.target.innerHTML) */
         if (evt.target.tagName == "BUTTON") {
             if (outputStringArray.length > 0) {
                 for (n = 0; n < outputStringArray.length; n++) {
                     if (evt.target.innerHTML == "copy script " + (n + 1)) {
-                        /* console.log("pressed: " + "copy script " + (n + 1))
-                        console.log(outputStringArray[n]) */
+                        console.log("pressed: " + "copy script " + (n + 1))
+                        console.log(outputStringArray[n].length)
                         navigator.clipboard.writeText(outputStringArray[n])
                         evt.target.style.backgroundColor = "rgb(200, 250, 200)"
                         /* console.log("pressed") */
