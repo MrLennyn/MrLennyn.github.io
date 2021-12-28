@@ -322,7 +322,7 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                 //console.log(outputStringArray.length)
                 for (n = 0; n < outputStringArray.length; n++) {
                     var element = document.createElement("button");
-                    element.appendChild(document.createTextNode('copy script ' + (n + 1) ));
+                    element.appendChild(document.createTextNode('Copy Script ' + (n + 1) ));
                     document.getElementById('buttondiv').appendChild(element);
                 }
 
@@ -332,7 +332,7 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                 outputString = outputString + renderString
 
                 var element = document.createElement("button");
-                element.appendChild(document.createTextNode('copy script'));
+                element.appendChild(document.createTextNode('Copy Script'));
                 document.getElementById('buttondiv').appendChild(element);
             }
 
@@ -358,8 +358,8 @@ document.querySelector('input[type="file"]').addEventListener('change', function
         if (evt.target.tagName == "BUTTON") {
             if (outputStringArray.length > 0) {
                 for (n = 0; n < outputStringArray.length; n++) {
-                    if (evt.target.innerHTML == "copy script " + (n + 1)) {
-                        console.log("pressed: " + "copy script " + (n + 1))
+                    if (evt.target.innerHTML == "Copy Script " + (n + 1)) {
+                        console.log("pressed: " + "Copy Script " + (n + 1))
                         console.log(outputStringArray[n].length)
                         navigator.clipboard.writeText(outputStringArray[n])
                         evt.target.style.backgroundColor = "rgb(200, 250, 200)"
