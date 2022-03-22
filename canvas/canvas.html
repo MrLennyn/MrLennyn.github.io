@@ -67,6 +67,8 @@
             <input id="line" type="image" src="../images/line_button.png" title="Line"/>
             <input id="rect" type="image" src="../images/rect_button.png" title="Rect"/>
             <input id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full"/>
+            <input id="triangle" type="image" src="../images/triangle_button.png" title="Triangle"/>
+            <input id="triangleF" type="image" src="../images/triangleF_button.png" title="TriangleF"/>
             <input id="eraser" type="image" src="../images/eraser_button.png" title="Eraser"/>
             <input id="color" type="color" value="#FFFFFF" title="Color Picker"/>
             
@@ -81,7 +83,11 @@
             <section id="outputSet">
 
                 <input id="copy" type="image" src="../images/copy_button.png" title="Copy Code to Clipboard"/>
-                
+                <div class="tools">
+                    <label for="char_count">Char Count:</label>
+                    <br>
+                    <label id="char_count_number">-</label>
+                </div>
                 <div class="tools">
                     <label for="gamma">Color Fix:</label>
                     <br>
@@ -91,6 +97,11 @@
                     <label for="compact">Compact:</label>
                     <br>
                     <input type="checkbox" id="compact" name="compact" title="Reduce the number of characters in script" checked>
+                </div>
+                <div class="tools">
+                    <label for="shapeF fix">Filled-Shape Fix:</label>
+                    <br>
+                    <input type="checkbox" id="shapeF fix" name="shapeF fix" title="Every Graphics Card displays full-shapes differently, this adds .5 to 'Y' to fix that issue" checked>
                 </div>
                 <div class="tools">
                     <label for="function mode">Function Mode:</label>
