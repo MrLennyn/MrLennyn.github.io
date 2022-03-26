@@ -4,7 +4,7 @@
         +-Rect
         +-RectFull
         +-Triangle
-        -TriangleFull
+        +-TriangleFull
         -Circle
         -CircleFull
         -Text
@@ -53,6 +53,9 @@ window.addEventListener("load", () =>{
     const rectF_shape = document.getElementById("rectF")
     const triangle_shape = document.getElementById("triangle")
     const triangleF_shape = document.getElementById("triangleF")
+    const circle_shape = document.getElementById("circle")
+    const circleF_shape = document.getElementById("circleF")
+    const text_shape = document.getElementById("text")
     const eraser = document.getElementById("eraser")
 
     const copy_button = document.getElementById("copy")
@@ -64,6 +67,8 @@ window.addEventListener("load", () =>{
     const char_count = document.getElementById("char_count_number")
 
     const position_indicator = document.getElementById("position")
+
+    const inputTextBox = document.getElementById("inputText")
 
     ctx.imageSmoothingEnabled = false;
 
@@ -96,7 +101,7 @@ window.addEventListener("load", () =>{
 
     let tool = "line"
     let color = "#FFFFFF"
-    let shapes = []; //[0]tool, [1]hex_color, [2,3,4,5]coordinates ...
+    shapes = []; //[0]tool, [1]hex_color, [2,3,4,5]coordinates ...
 
     let last_line = [0,0,0,0];
     let last_rectF = [0,0,0,0];
@@ -104,6 +109,9 @@ window.addEventListener("load", () =>{
     let last_triangle = [null,null,null,null,null,null]
 
     let triangle_mouse = [null,null,null,null,null,null]
+
+    inputTextActive = false
+
 
     //grid
     function drawGrid() {
@@ -154,6 +162,24 @@ window.addEventListener("load", () =>{
 
                 triangle_mouse = [null,null,null,null,null,null]
             }
+        } else if (tool == "text") {
+            
+            if (!inputTextActive) {
+                inputTextPos = startPixel
+                inputTextActive = true
+
+                let ctxOffsets = canvas.getBoundingClientRect();
+                inputTextBox.style.position = 'fixed'
+                inputTextBox.style.display = 'block'
+                inputTextBox.style.top = (e.offsetY + ctxOffsets.top) + 'px'
+                inputTextBox.style.left = (e.offsetX + ctxOffsets.left) + 'px'
+                //this gotta be here otherwise focus() won't do the thing
+                window.setTimeout(function() {document.getElementById("inputText").focus()},0)
+                
+            } else {
+                inputTextEntered()
+            }
+            
         } else {
             triangle_mouse = [null,null,null,null,null,null]
         }
@@ -188,9 +214,13 @@ window.addEventListener("load", () =>{
         if (tool == "line") {
             pushLine(pos[0],pos[1],pos[2],pos[3])
         } else if (tool == "rect") {
-            pushRectF(pos[0],pos[1],pos[2],pos[3]) //drawRectF works for both types of rect
+            pushRectF(pos[0],pos[1],pos[2],pos[3]) //pushRectF works for both types of rect
         } else if (tool == "rectF") {
-            pushRectF(pos[0],pos[1],pos[2],pos[3])
+            pushRectF(pos[0],pos[1],pos[2],pos[3]) 
+        } else if (tool == "circle") {
+            pushCircle(pos[0],pos[1],pos[2],pos[3]) 
+        } else if (tool == "circleF") {
+            pushCircle(pos[0],pos[1],pos[2],pos[3]) //push circle should work for both circles
         } else if (tool == "eraser") {
             erase(pos[0],pos[1])
         }
@@ -237,22 +267,14 @@ window.addEventListener("load", () =>{
                 drawLine(s_color,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
             } else if (s_tool == "triangleF") {
                 drawFilledTriangle(s_color,shapes[i+2],shapes[i+3],shapes[i+4])
+            } else if (s_tool == "circle") {
+                drawCircle(s_color, x, y, w)
+            } else if (s_tool == "circleF") {
+                drawCircleF(s_color, x, y, w)
+            } else if (s_tool == "text") {
+                drawText(s_color, x-1, y-1, w) //w is text string
             }
         }
-
-        //filledBottomFlatTriangle(cursorColor,[15,5],[5,20],[15,20])
-        //filledTopFlatTriangle(cursorColor,[5,5],[15,5],[15,20])
-
-        //drawFilledTriangle(cursorColor,[10,5],[5,20],[20,40])
-        //drawFilledTriangle(cursorColor,[10,5],[5,20],[18,13])
-
-
-        /* drawText(1,1,"hellooooo") */
-        /* drawText(1,1,".!#$%&")
-        drawText(1,8,"`()*")
-        drawText(1,15,"+,-/")
-        drawText(1,20,"0123456789") */
-        //ctx.fillRect(cursorPixel[0]*pixelSize, cursorPixel[1]*pixelSize, pixelSize, pixelSize);
     }
 
     function pushLine(x1,y1,x2,y2) {
@@ -301,6 +323,33 @@ window.addEventListener("load", () =>{
         shapes.push(tool, color, cord1, cord2, cord3, "")
     }
 
+    function pushCircle(x1,y1,x2,y2) {
+        ctx.fillStyle = color;
+
+        let x = Math.floor(x1)
+        let y = Math.floor(y1)
+        let r;
+
+        /* if (x2 - x1 >= y2 - y1) {
+            r = Math.floor(Math.max(x1,x2) - Math.min(x1,x2))
+        } else if (x2 - x1 < y2 - y1) {
+            r = Math.floor(Math.max(y1,y2) - Math.min(y1,y2))
+        } */
+        if (Math.max(x1,x2) - Math.min(x1,x2) >= Math.max(y1,y2) - Math.min(y1,y2)) {
+            r = Math.floor(Math.max(x1,x2) - Math.min(x1,x2))
+        } else if (Math.max(x1,x2) - Math.min(x1,x2) < Math.max(y1,y2) - Math.min(y1,y2)) {
+            r = Math.floor(Math.max(y1,y2) - Math.min(y1,y2))
+        }
+        //console.log("rad", r)
+
+        r = Math.abs(r)
+    
+        shapes.push(tool, color, x, y, r, "")
+    }
+
+    function pushText(x,y,text) {
+        shapes.push(tool, color, x, y, text, "")
+    }
 
     //Event Listeners
     window.addEventListener("resize", resized)
@@ -323,6 +372,9 @@ window.addEventListener("load", () =>{
     rectF_shape.addEventListener("click",changeTool);
     triangle_shape.addEventListener("click",changeTool);
     triangleF_shape.addEventListener("click",changeTool);
+    circle_shape.addEventListener("click",changeTool);
+    circleF_shape.addEventListener("click",changeTool);
+    text_shape.addEventListener("click",changeTool);
     eraser.addEventListener("click",changeTool);
 
 
@@ -332,6 +384,7 @@ window.addEventListener("load", () =>{
     function_mode.addEventListener("change",outputCode);
     shapeF_fix.addEventListener("change",outputCode);
 
+    inputTextBox.addEventListener("change",inputTextEntered)
 
 
     document.addEventListener('keydown', function(event) {
@@ -341,6 +394,21 @@ window.addEventListener("load", () =>{
             redo();
         }
     });
+
+    function inputTextEntered(e) {
+        
+        inputTextBox.style.position = 'fixed'
+        inputTextBox.style.display = 'none'
+        inputTextBox.style.top = 0 + 'px'
+        inputTextBox.style.left = 0 + 'px'
+        let text = inputTextBox.value
+        if (inputTextBox.value.length > 0) {
+            pushText(inputTextPos[0],inputTextPos[1],text)
+        }
+        inputTextBox.value = ""
+        inputTextActive = false
+        draw()
+    }
 
     function drawLine(color,x1,y1,x2,y2) {
         ctx.fillStyle = color;
@@ -385,6 +453,7 @@ window.addEventListener("load", () =>{
 
     function filledTopFlatTriangle(color, p1, p2, p3) {
         //p3 must be the bottom point
+
         let invSlope1 = (p3[0] - p1[0]) / (p3[1] - p1[1])
         let invSlope2 = (p3[0] - p2[0]) / (p3[1] - p2[1])
 
@@ -392,7 +461,7 @@ window.addEventListener("load", () =>{
         let curx2 = p3[0]
 
         for (let y = p3[1]; y > p1[1]; y--) {
-            drawLine(color, Math.round(curx1), y, Math.round(curx2), y)
+            drawLine(color, Math.floor(curx1), y, Math.floor(curx2), y)
             curx1 -= invSlope1
             curx2 -= invSlope2
         }
@@ -417,16 +486,71 @@ window.addEventListener("load", () =>{
             p3 = temp[0]
             p2 = temp[1]
         }
+        /* if (p1[0] > p2[0]) {
+            temp = swapCoords(p1,p2)
+            p1 = temp[0]
+            p2 = temp[1]
+        } */
+
+        //console.log(p1,p2,p3)
 
         if (p2[1] == p3[1]) {
             filledBottomFlatTriangle(color,p1,p2,p3)
         } else if (p1[1] == p2[1]) {
-            filledTopFlatTriangle(color,p1,p2,p3)
+            //console.log(p1,p2,p3)
+            //if (p1[0 == p3[0] && )
+            filledTopFlatTriangle(color,[p1[0],[p1[1]-1]],[p2[0],[p2[1]-1]],p3)
         } else {
             let p4 = [(p1[0] + ((p2[1] - p1[1]) / (p3[1] - p1[1])) * (p3[0] - p1[0])), p2[1]]
             filledBottomFlatTriangle(color,p1,p2,p4)
             filledTopFlatTriangle(color,p2,p4,p3)
         }
+    }
+
+    function drawCircle(color, centerX, centerY, radius) {
+        //https://stackoverflow.com/questions/1022178/how-to-make-a-circle-on-a-grid
+        ctx.fillStyle = color;
+        
+        d = 3 - (2 * radius);
+        x = 0;
+        y = radius;
+    
+        do {
+            ctx.fillRect((centerX + x)*pixelSize, (centerY + y)*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect((centerX + x)*pixelSize, (centerY - y)*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect((centerX - x)*pixelSize, (centerY + y)*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect((centerX - x)*pixelSize, (centerY - y)*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect((centerX + y)*pixelSize, (centerY + x)*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect((centerX + y)*pixelSize, (centerY - x)*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect((centerX - y)*pixelSize, (centerY + x)*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect((centerX - y)*pixelSize, (centerY - x)*pixelSize, pixelSize, pixelSize);
+
+            if (d < 0) {
+                d = d + (4 * x) + 12;
+            } else {
+                d = d + 4 * (x - y) + 10;
+                y--;
+            }
+            x++;
+        } while (x <= y);
+    }
+    
+    function drawCircleF(color, centerX, centerY, radius) {
+        ctx.fillStyle = color;
+        //radius += 0.5
+        let top = Math.floor(centerY - radius)
+        let bottom = Math.ceil(centerY + radius)
+        let left = Math.floor(centerX - radius)
+        let right = Math.ceil(centerX + radius)
+
+        for (let y = top; y <= bottom; y++) {
+            for (let x = left; x <= right; x++) {
+                if (insideCircleF(x, y, centerX, centerY, radius)) {
+                    ctx.fillRect(x*pixelSize, y*pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+        drawCircle(color, centerX, centerY, radius)
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -455,7 +579,11 @@ window.addEventListener("load", () =>{
                 cursorRect(pixel)
             } else if (tool == "rectF") {
                 cursorRectF(pixel)
-            } 
+            } else if (tool == "circle") {
+                cursorCircle(pixel)
+            } else if (tool == "circleF") {
+                cursorCircle(pixel)
+            }
         } else if (tool == "eraser") {
             cursorErase(pixel)
         }
@@ -538,15 +666,38 @@ window.addEventListener("load", () =>{
         
         ctx.fillStyle = cursorColor;
 
-        if (coords[2] && coords[3]) {
+        if ((coords[2] >= 0 && coords[2] != null) && (coords[3] >= 0 && coords[3] != null)) {
             drawLineForCursor(cursorColor,pixel[0],pixel[1],coords[0],coords[1])
             drawLineForCursor(cursorColor,coords[2],coords[3],pixel[0],pixel[1])
             drawLineForCursor(cursorColor,coords[0],coords[1],coords[2],coords[3])
-        } else if (coords[0] && coords[1]) {
+        } else if ((coords[0] >= 0 && coords[0] != null) && (coords[1] >= 0 && coords[1] != null)) {
             drawLineForCursor(cursorColor,coords[0],coords[1],pixel[0],pixel[1])
         }
 
         last_triangle = coords;
+    }
+
+    function cursorCircle(pixel) {
+        ctx.fillStyle = cursorColor;
+
+        let x1 = startPixel[0]
+        let y1 = startPixel[1]
+        let x2 = pixel[0]
+        let y2 = pixel[1]
+
+        let x = Math.floor(x1)
+        let y = Math.floor(y1)
+        let r;
+
+        if (Math.max(x1,x2) - Math.min(x1,x2) >= Math.max(y1,y2) - Math.min(y1,y2)) {
+            r = Math.floor(Math.max(x1,x2) - Math.min(x1,x2))
+        } else if (Math.max(x1,x2) - Math.min(x1,x2) < Math.max(y1,y2) - Math.min(y1,y2)) {
+            r = Math.floor(Math.max(y1,y2) - Math.min(y1,y2))
+        }
+
+        r = Math.abs(r)
+
+        drawCircle(cursorColor, x, y, r)
     }
 
     function cursorErase(pixel) {
@@ -564,8 +715,6 @@ window.addEventListener("load", () =>{
             let y2 = shapes[i+5]
 
             if (insideRect(x,y,x1,y1,x2,y2)) {
-                
-                
                 if (tool_type == "rectF") {
                     ctx.fillStyle = cursorColor;
                     ctx.fillRect(x1*pixelSize, y1*pixelSize, x2*pixelSize, y2*pixelSize);
@@ -610,6 +759,23 @@ window.addEventListener("load", () =>{
 
                     drawFilledTriangle(cursorColor,shapes[i+2], shapes[i+3], shapes[i+4])
 
+                    break
+                }
+            } else if (tool_type == "circle") {
+                if (insideCircle(x,y,x1,y1,x2)) {
+                    drawCircle(cursorColor,x1,y1,x2)
+
+                    break
+                }
+            } else if (tool_type == "circleF") {
+                if (insideCircleF(x,y,x1,y1,x2)) {
+                    drawCircleF(cursorColor,x1,y1,x2)
+
+                    break
+                }
+            } else if (tool_type == "text") {
+                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
+                    drawText(cursorColor, x1-1, y1-1, x2)
                     break
                 }
             }
@@ -677,23 +843,12 @@ window.addEventListener("load", () =>{
         document.getElementById("rectF").style.backgroundColor = "#EFEFEF"
         document.getElementById("triangle").style.backgroundColor = "#EFEFEF"
         document.getElementById("triangleF").style.backgroundColor = "#EFEFEF"
+        document.getElementById("circle").style.backgroundColor = "#EFEFEF"
+        document.getElementById("circleF").style.backgroundColor = "#EFEFEF"
+        document.getElementById("text").style.backgroundColor = "#EFEFEF"
         document.getElementById("eraser").style.backgroundColor = "#EFEFEF"
 
         document.getElementById(tool).style.backgroundColor = "#ac3232"
-
-        /* if (tool == "line") {
-            document.getElementById("line").style.backgroundColor = "#ac3232"
-        } else if (tool == "rect") {
-            document.getElementById("rect").style.backgroundColor = "#ac3232"
-        } else if (tool == "rectF") {
-            document.getElementById("rectF").style.backgroundColor = "#ac3232"
-        } else if (tool == "eraser") {
-            document.getElementById("eraser").style.backgroundColor = "#ac3232"
-        } else if (tool == "triangle") {
-            document.getElementById("triangle").style.backgroundColor = "#ac3232"
-        } else if (tool == "triangleF") {
-            document.getElementById("triangleF").style.backgroundColor = "#ac3232"
-        } */
 
     }
 
@@ -773,11 +928,68 @@ window.addEventListener("load", () =>{
                     shapes.splice(i, 6)
                     break
                 }
+            } else if (tool_type == "circle") {
+                if (insideCircle(x,y,x1,y1,x2)) {
+                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
+                    shapes.splice(i, 6)
+                    break
+                }
+            } else if (tool_type == "circleF") {
+                if (insideCircleF(x,y,x1,y1,x2)) {
+                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
+                    shapes.splice(i, 6)
+                    break
+                }
+            } else if (tool_type == "text") {
+                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
+                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
+                    shapes.splice(i, 6)
+                    break
+                }
             }
         }
     }
 
-    /* var letters = {
+    var letters = {
+        //each one of this numbers is a square in the 4x5 grid that represents each letter. 0,0 being 1, 4,5 being 20.
+        "0": [2,3,5,7,8,9,10,12,13,16,18,19],
+        "1": [2,5,6,10,14,18],
+        "2": [2,3,5,8,11,14,17,18,19,20],
+        "3": [1,2,3,8,10,11,16,17,18,19],
+        "4": [1,4,5,8,9,10,11,12,16,20],
+        "5": [1,2,3,4,5,9,10,11,16,17,18,19],
+        "6": [2,3,5,9,10,11,13,16,18,19],
+        "7": [1,2,3,4,8,11,15,19],
+        "8": [2,3,5,8,10,11,13,16,18,19],
+        "9": [2,3,5,8,10,11,12,16,18,19],
+
+        "a": [2,3,5,8,9,10,11,12,13,16,17,20],
+        "b": [1,2,3,5,8,9,10,11,13,16,17,18,19],
+        "c": [2,3,5,8,9,13,16,18,19],
+        "d": [1,2,3,5,8,9,12,13,16,17,18,19],
+        "e": [1,2,3,4,5,9,10,11,13,17,18,19,20],
+        "f": [1,2,3,4,5,9,10,11,13,17],
+        "g": [2,3,5,9,11,12,13,16,18,19],
+        "h": [1,4,5,8,9,12,13,14,15,16,17,20],
+        "i": [2,6,10,14,18],
+        "j": [4,8,12,13,16,18,19],
+        "k": [1,4,5,7,9,10,13,15,17,20],
+        "l": [1,5,9,13,17,18,19,20],
+        "m": [1,4,5,6,7,8,9,12,13,16,17,20],
+        "n": [1,4,5,6,8,9,11,12,13,16,17,20],
+        "o": [2,3,5,8,9,12,13,16,18,19],
+        "p": [1,2,3,5,8,9,10,11,13,17],
+        "q": [2,3,5,8,9,12,13,15,16,18,19,20],
+        "r": [1,2,3,5,8,9,10,11,13,15,17,20],
+        "s": [2,3,4,5,10,11,16,17,18,19],
+        "t": [1,2,3,6,10,14,18],
+        "u": [1,4,5,8,9,12,13,16,18,19],
+        "v": [1,3,5,7,9,11,13,15,18],
+        "w": [1,4,5,8,9,12,13,14,15,16,17,20],
+        "x": [1,4,5,8,10,11,13,16,17,20],
+        "y": [1,3,5,7,10,14,18],
+        "z": [1,2,3,4,8,10,11,13,17,18,19,20],
+        
         ".": [18],
         "!": [2,6,10,18],
         "#": [1,3,5,6,7,8,9,11,13,14,15,16,17,19],
@@ -793,15 +1005,29 @@ window.addEventListener("load", () =>{
         "-": [9,10,11],
         "/": [3,7,10,13,17],
 
+        ":": [6,14],
+        ";": [6,14,18],
+        "<": [3,6,9,14,19],
+        "=": [5,6,7,13,14,15],
+        ">": [1,6,11,14,17],
+        "?": [1,2,7,10,18],
+        "@": [2,3,5,8,9,11,12,13,18,19,20],
 
-        "h": [1,4,5,8,9,12,13,14,15,16,17,20],
-        "e": [1,2,3,4,5,9,10,11,13,17,18,19,20],
-        "l": [1,5,9,13,17,18,19,20],
-        "o": [2,3,5,8,9,12,13,16,18,19],
+        "[": [2,3,6,10,14,18,19],
+        "]": [2,3,7,11,15,18,19],
+        "^": [2,5,7],
+        "_": [17,18,19,20],
+        "|": [2,6,14,18],
+        "{": [2,3,6,9,10,14,18,19],
+        "}": [1,2,6,10,11,14,17,18],
     }
     
-    function drawText(x,y,text) {
+    function drawText(color, x, y, text) {
         //console.log(letters.h)
+        ctx.fillStyle = color;
+
+        text = text.toLowerCase()
+
         for (let i = 0; i < text.length; i++) {
     
             let char = text.charAt(i)
@@ -810,14 +1036,14 @@ window.addEventListener("load", () =>{
                 if (key == char) {
                     for (let l = 0; l < letters[key].length; l++) {
                         let pos = letterPos(letters[key][l])
-                        ctx.fillStyle = color;
+                        
                         ctx.fillRect((pos[1]+x+(i*5))*pixelSize, (pos[2]+y)*pixelSize, pixelSize, pixelSize);
-                        ctx.fill()
+                        //ctx.fill()
                     }
                 }
             }
         }
-    } */
+    }
     
     function letterPos(x) {
         let pos = [0,0]
@@ -887,6 +1113,8 @@ window.addEventListener("load", () =>{
         let rectF_string = "";
         let triangle_string = "";
         let triangleF_string = "";
+        let circle_string = "";
+        let circleF_string = "";
 
         if (compact.checked) {
             set_color_string = "sc(";
@@ -895,8 +1123,11 @@ window.addEventListener("load", () =>{
             rectF_string = "drf(";
             triangle_string = "dt(";
             triangleF_string = "dtf(";
+            circle_string = "dc(";
+            circleF_string = "dcf(";
+            text_string = "dtx(";
             
-            final_string = final_string + "s=screen<br>sc=s.setColor<br>dl=s.drawLine<br>dr=s.drawRect<br>drf=s.drawRectF<br>dt=s.drawTriangle<br>dtf=s.drawTriangleF<br><br>"
+            final_string = final_string + "s=screen<br>sc=s.setColor<br>dl=s.drawLine<br>dr=s.drawRect<br>drf=s.drawRectF<br>dt=s.drawTriangle<br>dtf=s.drawTriangleF<br>dc=s.drawCircle<br>dcf=s.drawCircleF<br>dtx=s.drawText<br><br>"
             if (function_mode.checked) {
                 final_string = final_string + "function onDraw()<br><br>shape(0,0)<br><br>end<br><br>function shape(x,y)<br><br>"
             } else {
@@ -914,8 +1145,11 @@ window.addEventListener("load", () =>{
             line_string = "screen.drawLine(";
             rect_string = "screen.drawRect(";
             rectF_string = "screen.drawRectF(";
-            triangle_string = "screen.drawTriangle("
-            triangleF_string = "screen.drawTriangleF("
+            triangle_string = "screen.drawTriangle(";
+            triangleF_string = "screen.drawTriangleF(";
+            circle_string = "screen.drawCircle(";
+            circleF_string = "screen.drawCircleF(";
+            text_string = "screen.drawText(";
         }
 
         for (let i = 0; i < shapes.length; i += 6) {
@@ -981,14 +1215,31 @@ window.addEventListener("load", () =>{
                     tool_string = triangleF_string + shapes[i+2][0] + "," + ty1 + "," + //continues down
                     shapes[i+3][0] + "," + ty2 + "," + shapes[i+4][0] + "," + ty3 + ")"
                 }
-                
+            } else if (tool_type == "circle") {
+                if (function_mode.checked) {
+                    tool_string = circle_string + x1 + "+x," + y1 + "+y," + x2 + ")"
+                } else {
+                    tool_string = circle_string + x1 + "," + y1 + "," + x2 + ")"
+                }
+            } else if (tool_type == "circleF") {
+                if (function_mode.checked) {
+                    tool_string = circleF_string + x1 + "+x," + y1 + "+y," + x2 + ")"
+                } else {
+                    tool_string = circleF_string + x1 + "," + y1 + "," + x2 + ")"
+                }
+            } else if (tool_type == "text") { //x2 is text
+                if (function_mode.checked) {
+                    tool_string = text_string + x1 + "+x," + y1 + "+y," + "\"" + x2 + "\"" + ")"
+                } else {
+                    tool_string = text_string + x1 + "," + y1 + "," + "\"" + x2 + "\"" + ")"
+                }
             }
             final_string = final_string + tool_string + "<br>"
         }
         
         final_string = final_string + "<br>end"
         output.innerHTML = final_string
-        char_count.innerHTML = final_string.replaceAll('<br>',' ').length + 1
+        char_count.innerHTML = final_string.replaceAll('<br>',' ').length
         //console.log(output.innerHTML)
         console.log(final_string.length)
     }
@@ -1002,9 +1253,11 @@ window.addEventListener("load", () =>{
 });
 
 window.onbeforeunload = e => {
-    var dialogText = 'Do you really want to leave this site?';
-    e.returnValue = dialogText;
-    return dialogText;
+    if (shapes.length > 0) {
+        var dialogText = 'Do you really want to leave this site?';
+        e.returnValue = dialogText;
+        return dialogText;
+    }
 };
 
 function resized() {
@@ -1122,37 +1375,39 @@ function insideLine(x,y,x1,y1,x2,y2) {
     }
 }
 
-/* ctx.fillStyle = "white";
+function insideCircle(px, py, centerX, centerY, radius) {
+    let d = 3 - (2 * radius);
+    let x = 0;
+    let y = radius;
 
-        function drawCircle(centerX, centerY, radius) {
-            //https://stackoverflow.com/questions/1022178/how-to-make-a-circle-on-a-grid
-            d = 3 - (2 * radius);
-            x = 0;
-            y = radius;
-        
-            do {
-                ctx.fillRect((centerX + x)*pixelSize, (centerY + y)*pixelSize, pixelSize, pixelSize);
-                ctx.fillRect((centerX + x)*pixelSize, (centerY - y)*pixelSize, pixelSize, pixelSize);
-                ctx.fillRect((centerX - x)*pixelSize, (centerY + y)*pixelSize, pixelSize, pixelSize);
-                ctx.fillRect((centerX - x)*pixelSize, (centerY - y)*pixelSize, pixelSize, pixelSize);
-                ctx.fillRect((centerX + y)*pixelSize, (centerY + x)*pixelSize, pixelSize, pixelSize);
-                ctx.fillRect((centerX + y)*pixelSize, (centerY - x)*pixelSize, pixelSize, pixelSize);
-                ctx.fillRect((centerX - y)*pixelSize, (centerY + x)*pixelSize, pixelSize, pixelSize);
-                ctx.fillRect((centerX - y)*pixelSize, (centerY - x)*pixelSize, pixelSize, pixelSize);
+    do {
+        if (
+           insideRect(px, py, (centerX + x), (centerY + y), 1, 1)
+        || insideRect(px, py, (centerX + x), (centerY - y), 1, 1)
+        || insideRect(px, py, (centerX - x), (centerY + y), 1, 1)
+        || insideRect(px, py, (centerX - x), (centerY - y), 1, 1)
 
-                if (d < 0) {
-                    d = d + (4 * x) + 12;
-                } else {
-                    d = d + 4 * (x - y) + 10;
-                    y--;
-                }
-                x++;
-            } while (x <= y);
+        || insideRect(px, py, (centerX + y), (centerY + x), 1, 1)
+        || insideRect(px, py, (centerX + y), (centerY - x), 1, 1)
+        || insideRect(px, py, (centerX - y), (centerY + x), 1, 1)
+        || insideRect(px, py, (centerX - y), (centerY - x), 1, 1)
+        ) {
+            return true
         }
 
-        drawCircle(40, 40, 5)
-        drawCircle(40, 40, 9)
-        drawCircle(40, 40, 15)
-        drawCircle(40, 40, 25)
-        drawCircle(40, 40, 30)
- */
+        if (d < 0) {
+            d = d + (4 * x) + 12;
+        } else {
+            d = d + 4 * (x - y) + 10;
+            y--;
+        }
+        x++;
+    } while (x <= y);
+}
+
+function insideCircleF(x, y, centerX, centerY, radius) {
+    let dx = centerX - x
+    let dy = centerY - y
+    let distance_squared = dx*dx + dy*dy
+    return distance_squared <= radius*radius
+}

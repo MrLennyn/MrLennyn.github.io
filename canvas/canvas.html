@@ -23,6 +23,7 @@
                 <li><a href = "../imagetolua/imagetolua.html">Image Lua Converter</a></li>
                 <li><a href = "canvas.html">Drawing Canvas</a></li>
                 <li><a href = "../links/links.html">Links</a></li>
+                <li><a href = "help.html">Help</a></li>
             </ul>
             <h1>Drawing Canvas</h1>
         </header>
@@ -68,7 +69,10 @@
             <input id="rect" type="image" src="../images/rect_button.png" title="Rect"/>
             <input id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full"/>
             <input id="triangle" type="image" src="../images/triangle_button.png" title="Triangle"/>
-            <input id="triangleF" type="image" src="../images/triangleF_button.png" title="TriangleF"/>
+            <input id="triangleF" type="image" src="../images/triangleF_button.png" title="Triangle Full"/>
+            <input id="circle" type="image" src="../images/circle_button.png" title="Circle"/>
+            <input id="circleF" type="image" src="../images/circleF_button.png" title="Circle Full"/>
+            <input id="text" type="image" src="../images/text_button.png" title="Text"/>
             <input id="eraser" type="image" src="../images/eraser_button.png" title="Eraser"/>
             <input id="color" type="color" value="#FFFFFF" title="Color Picker"/>
             
@@ -78,6 +82,8 @@
             <canvas id="canvas" width="864px" height="480px"></canvas>
             <div id="position">(0,0)</div> 
         </div>
+
+        
         
         <div>
             <section id="outputSet">
@@ -118,6 +124,6 @@
     </body>
     <script src = "canvas.js"></script>
 
-
+    <input type="text" id="inputText" name="inputText" size="10">
 
 </html>
