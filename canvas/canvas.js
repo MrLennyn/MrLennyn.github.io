@@ -278,7 +278,11 @@ window.addEventListener("load", () =>{
     }
 
     function pushLine(x1,y1,x2,y2) {
-        ctx.fillStyle = color;
+
+        if (!x1 || !y1) { //checking its not NaN
+            return
+        }
+        //ctx.fillStyle = color;
 
         let x = Math.floor(x1)
         let y = Math.floor(y1)
@@ -292,7 +296,10 @@ window.addEventListener("load", () =>{
     }
 
     function pushRectF(x1,y1,x2,y2) { //startX,Y,endX,Y
-        ctx.fillStyle = color;
+
+        if (!x1 || !y1) { //checking its not NaN
+            return
+        }
 
         let x = Math.floor(x1)
         let y = Math.floor(y1)
@@ -312,7 +319,10 @@ window.addEventListener("load", () =>{
     }
 
     function pushTriangle(x1,y1,x2,y2,x3,y3) {
-        ctx.fillStyle = color;
+
+        if (!x1 || !y1) { //checking its not NaN
+            return
+        }
 
         let cord1 = [Math.floor(x1),Math.floor(y1)]
         let cord2 = [Math.floor(x2),Math.floor(y2)]
@@ -324,17 +334,15 @@ window.addEventListener("load", () =>{
     }
 
     function pushCircle(x1,y1,x2,y2) {
-        ctx.fillStyle = color;
+
+        if (!x1 || !y1) { //checking its not NaN
+            return
+        }
 
         let x = Math.floor(x1)
         let y = Math.floor(y1)
         let r;
 
-        /* if (x2 - x1 >= y2 - y1) {
-            r = Math.floor(Math.max(x1,x2) - Math.min(x1,x2))
-        } else if (x2 - x1 < y2 - y1) {
-            r = Math.floor(Math.max(y1,y2) - Math.min(y1,y2))
-        } */
         if (Math.max(x1,x2) - Math.min(x1,x2) >= Math.max(y1,y2) - Math.min(y1,y2)) {
             r = Math.floor(Math.max(x1,x2) - Math.min(x1,x2))
         } else if (Math.max(x1,x2) - Math.min(x1,x2) < Math.max(y1,y2) - Math.min(y1,y2)) {
@@ -348,6 +356,10 @@ window.addEventListener("load", () =>{
     }
 
     function pushText(x,y,text) {
+        if (!x || !y) { //checking its not NaN
+            return
+        }
+
         shapes.push(tool, color, x, y, text, "")
     }
 
