@@ -112,7 +112,7 @@ window.addEventListener("load", () =>{
 
     inputTextActive = false
 
-
+    outputCode()
     //grid
     function drawGrid() {
         if (grid_checkbox.checked) {
@@ -279,10 +279,9 @@ window.addEventListener("load", () =>{
 
     function pushLine(x1,y1,x2,y2) {
 
-        if (!x1 || !y1) { //checking its not NaN
+        if (x1 == null || y1 == null) { //checking its not NaN
             return
         }
-        //ctx.fillStyle = color;
 
         let x = Math.floor(x1)
         let y = Math.floor(y1)
@@ -297,7 +296,7 @@ window.addEventListener("load", () =>{
 
     function pushRectF(x1,y1,x2,y2) { //startX,Y,endX,Y
 
-        if (!x1 || !y1) { //checking its not NaN
+        if (x1 == null || y1 == null) { //checking its not NaN
             return
         }
 
@@ -320,7 +319,7 @@ window.addEventListener("load", () =>{
 
     function pushTriangle(x1,y1,x2,y2,x3,y3) {
 
-        if (!x1 || !y1) { //checking its not NaN
+        if (x1 == null || y1 == null) { //checking its not NaN
             return
         }
 
@@ -335,7 +334,7 @@ window.addEventListener("load", () =>{
 
     function pushCircle(x1,y1,x2,y2) {
 
-        if (!x1 || !y1) { //checking its not NaN
+        if (x1 == null || y1 == null) { //checking its not NaN
             return
         }
 
@@ -356,7 +355,7 @@ window.addEventListener("load", () =>{
     }
 
     function pushText(x,y,text) {
-        if (!x || !y) { //checking its not NaN
+        if (x == null || y == null) { //checking its not NaN
             return
         }
 
