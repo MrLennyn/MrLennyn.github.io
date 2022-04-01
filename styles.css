@@ -178,7 +178,7 @@ select {
     border: 0px;
     border-radius: 5px;
     width: 100px;
-    height: 39px;
+    height: 35px;
     vertical-align: top;
 }
 
@@ -192,6 +192,8 @@ select {
     margin: 0px;
     padding: 5px;
     border-radius: 5px;
+    width: 25px;
+    height: 25px;
 }
 
 .shapes input:hover {
@@ -249,6 +251,15 @@ select {
     top: 120px;
     left: 120px;
 }
+
+/* #inputTextDiv {
+    display: none;
+    background-color: rgb(165, 165, 165);
+    color: black;
+    padding: 6px;
+    border-radius: 5px;
+    position: fixed;
+} */
 
 a {
     color: rgb(182, 180, 190);

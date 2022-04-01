@@ -58,24 +58,30 @@
                 <br>
                 <input type="file" id="refimage" name="refimage" title="Upload Reference Image" accept="image/png, image/jpeg">
             </div>
+            <div class="tools">
+                <label for="img_hide" title="Hide Image">Hide Image:</label>
+                <br>
+                <input type="checkbox" id="img_hide" name="img_hide" title="Hide Image">
+            </div>
             
             
         </div>
 
         <div id="shapes" class="shapes">
-            <input id="undo" type="image" src="../images/undo_button.png" title="Undo"/>
-            <input id="redo" type="image" src="../images/redo_button.png" title="Redo"/>
-            <input id="line" type="image" src="../images/line_button.png" title="Line"/>
-            <input id="rect" type="image" src="../images/rect_button.png" title="Rect"/>
-            <input id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full"/>
-            <input id="triangle" type="image" src="../images/triangle_button.png" title="Triangle"/>
-            <input id="triangleF" type="image" src="../images/triangleF_button.png" title="Triangle Full"/>
-            <input id="circle" type="image" src="../images/circle_button.png" title="Circle"/>
-            <input id="circleF" type="image" src="../images/circleF_button.png" title="Circle Full"/>
-            <input id="text" type="image" src="../images/text_button.png" title="Text"/>
-            <input id="eraser" type="image" src="../images/eraser_button.png" title="Eraser"/>
+            <input id="undo" type="image" src="../images/undo_button.png" title="Undo [CTRL+Z]"/>
+            <input id="redo" type="image" src="../images/redo_button.png" title="Redo [CTRL+Y]"/>
+            <input id="line" type="image" src="../images/line_button.png" title="Line [Q]"/>
+            <input id="rect" type="image" src="../images/rect_button.png" title="Rect [W]"/>
+            <input id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full [W]"/>
+            <input id="triangle" type="image" src="../images/triangle_button.png" title="Triangle [E]"/>
+            <input id="triangleF" type="image" src="../images/triangleF_button.png" title="Triangle Full [E]"/>
+            <input id="circle" type="image" src="../images/circle_button.png" title="Circle [R]"/>
+            <input id="circleF" type="image" src="../images/circleF_button.png" title="Circle Full [R]"/>
+            <input id="text" type="image" src="../images/text_button.png" title="Text [T]"/>
+            <input id="shape_color" type="image" src="../images/shape_color_button.png" title="Shape Color [S]"/>
+            <input id="bucket_color" type="image" src="../images/bucket_button.png" title="Bucket Color [D]"/>
+            <input id="eraser" type="image" src="../images/eraser_button.png" title="Eraser [F]"/>
             <input id="color" type="color" value="#FFFFFF" title="Color Picker"/>
-            
         </div>
         
         <div>
@@ -125,5 +131,9 @@
     <script src = "canvas.js"></script>
 
     <input type="text" id="inputText" name="inputText" size="10">
+    <!-- <div id="inputTextDiv">
+        
+    </div> -->
+        
 
 </html>
