@@ -5,9 +5,9 @@
         +-RectFull
         +-Triangle
         +-TriangleFull
-        -Circle
-        -CircleFull
-        -Text
+        +Circle
+        +CircleFull
+        +Text
         -TextBox
     options:
         +-Scale (change pixelSize)
@@ -38,6 +38,8 @@ window.addEventListener("load", () =>{
     
     const canvas = document.querySelector("#canvas");
     const ctx = canvas.getContext("2d");
+
+    const canvas_div = document.getElementById("canvas_div")
 
     const ref_img = document.getElementById("refimage")
 
@@ -73,6 +75,8 @@ window.addEventListener("load", () =>{
 
     const inputTextBox = document.getElementById("inputText")
     /* const inputTextDiv = document.getElementById("inputTextDiv") */
+
+
 
     ctx.imageSmoothingEnabled = false;
 
@@ -116,16 +120,18 @@ window.addEventListener("load", () =>{
 
     inputTextActive = false
 
+    resized()
     outputCode()
+
     //grid
     function drawGrid() {
         if (grid_checkbox.checked) {
             ctx.fillStyle = '#303030';
             
-            for (var x = 0; x < screenWidth; x++) {
+            for (let x = 0; x < screenWidth; x++) {
                 ctx.fillRect(x * pixelSize, 0, 2 , canvas.height)
             }
-            for (var y = 0; y < screenHeight; y++) {
+            for (let y = 0; y < screenHeight; y++) {
                 ctx.fillRect(0, y * pixelSize, canvas.width , 2)
             }
 
@@ -134,9 +140,14 @@ window.addEventListener("load", () =>{
         }
             
     }
+
     drawGrid()
 
     function startPosition(e){
+
+        if (e.button != 0) { //if button isn't left mouse click, then don't do the things
+            return
+        }
 
         last_line = [0,0,0,0];
         last_rectF = [0,0,0,0];
@@ -181,6 +192,7 @@ window.addEventListener("load", () =>{
                 window.setTimeout(function() {document.getElementById("inputText").focus()},0)
                 
             } else {
+                inputTextActive = false
                 inputTextEntered()
             }
             
@@ -191,6 +203,10 @@ window.addEventListener("load", () =>{
     }
     
     function finishedPosition(e){
+        if (e.button != 0) { //if button isn't left mouse click, then don't do the things
+            return
+        }
+
         mouseDown = false;
 
         endPixel = [Math.floor(e.offsetX/pixelSize), Math.floor(e.offsetY/pixelSize)];
@@ -1704,6 +1720,9 @@ window.onbeforeunload = e => {
 
 function resized() {
     let zoom = (( window.outerWidth - 10 ) / window.innerWidth) * 100;
+    canvas_div.style.overflow = 'auto'
+    canvas_div.style.height = window.innerHeight
+    canvas_div.style.width = window.innerWidth
     console.log("zoom", zoom)
     var offsets = canvas.getBoundingClientRect();
     console.log("top", offsets.top)

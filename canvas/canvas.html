@@ -18,104 +18,107 @@
     </head>
     <body>
         <header>
-            <ul>
-                <li><a href = "../index.html">Home</a></li>
-                <li><a href = "../imagetolua/imagetolua.html">Image Lua Converter</a></li>
-                <li><a href = "canvas.html">Drawing Canvas</a></li>
-                <li><a href = "../links/links.html">Links</a></li>
-                <li><a href = "help.html">Help</a></li>
-            </ul>
-            <h1>Drawing Canvas</h1>
+            <div class="links">
+                <a href = "../index.html">Home</a>
+                <a href = "../imagetolua/imagetolua.html">Image Lua Converter</a>
+                <a href = "canvas.html" style="background-color: rgb(40, 46, 52)">Drawing Canvas</a>
+                <a href = "../links/links.html">Links</a>
+                <a href = "help.html">Help</a>
+            </div>
         </header>
 
-        <div id="toolbox">
-            <div class="tools">
-                <label for="scale">Zoom:</label>
-                <br>
-                <input type="range" id="scale" name="scale" min="4" max="24">
+        <div id="workspace">
+            <div id="options_box">
+                <div class="tools">
+                    <label for="scale">Zoom:</label>
+                    <br>
+                    <input type="range" id="scale" name="scale" min="4" max="24">
+                </div>
+                <div class="tools">
+                    <label for="grid" title="Enable/Disable Grid">Grid:</label>
+                    <br>
+                    <input type="checkbox" id="grid" name="grid" title="Enable/Disable Grid" checked>
+                </div>
+                <div class="tools">
+                    <label for="screen" title="Screen Size"> Screen:</label>
+                    <br>
+                    <select id="screen" title="Screen Size">
+                      <option value="1x1">1x1</option>
+                      <option value="2x1">2x1</option>
+                      <option value="2x2">2x2</option>
+                      <option value="3x1">3x1</option>
+                      <option value="3x2">3x2</option>
+                      <option value="3x3">3x3</option>
+                      <option value="5x3">5x3</option>
+                      <option value="9x5">9x5</option>
+                    </select>
+                </div>
+                <div class="tools">
+                    <label for="refimage" title="Enable/Disable Grid">Reference Img:</label>
+                    <br>
+                    <input type="file" id="refimage" name="refimage" title="Upload Reference Image" accept="image/png, image/jpeg">
+                </div>
+                <div class="tools">
+                    <label for="img_hide" title="Hide Image">Hide Image:</label>
+                    <br>
+                    <input type="checkbox" id="img_hide" name="img_hide" title="Hide Image">
+                </div>
             </div>
-            <div class="tools">
-                <label for="grid" title="Enable/Disable Grid">Grid:</label>
-                <br>
-                <input type="checkbox" id="grid" name="grid" title="Enable/Disable Grid" checked>
-            </div>
-            <div class="tools">
-                <label for="screen" title="Screen Size"> Screen:</label>
-                <br>
-                <select id="screen" title="Screen Size">
-                  <option value="1x1">1x1</option>
-                  <option value="2x1">2x1</option>
-                  <option value="2x2">2x2</option>
-                  <option value="3x1">3x1</option>
-                  <option value="3x2">3x2</option>
-                  <option value="3x3">3x3</option>
-                  <option value="5x3">5x3</option>
-                  <option value="9x5">9x5</option>
-                </select>
-            </div>
-            <div class="tools">
-                <label for="refimage" title="Enable/Disable Grid">Reference Img:</label>
-                <br>
-                <input type="file" id="refimage" name="refimage" title="Upload Reference Image" accept="image/png, image/jpeg">
-            </div>
-            <div class="tools">
-                <label for="img_hide" title="Hide Image">Hide Image:</label>
-                <br>
-                <input type="checkbox" id="img_hide" name="img_hide" title="Hide Image">
-            </div>
-            
-            
-        </div>
 
-        <div id="shapes" class="shapes">
-            <input id="undo" type="image" src="../images/undo_button.png" title="Undo [CTRL+Z]"/>
-            <input id="redo" type="image" src="../images/redo_button.png" title="Redo [CTRL+Y]"/>
-            <input id="line" type="image" src="../images/line_button.png" title="Line [Q]"/>
-            <input id="rect" type="image" src="../images/rect_button.png" title="Rect [W]"/>
-            <input id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full [W]"/>
-            <input id="triangle" type="image" src="../images/triangle_button.png" title="Triangle [E]"/>
-            <input id="triangleF" type="image" src="../images/triangleF_button.png" title="Triangle Full [E]"/>
-            <input id="circle" type="image" src="../images/circle_button.png" title="Circle [R]"/>
-            <input id="circleF" type="image" src="../images/circleF_button.png" title="Circle Full [R]"/>
-            <input id="text" type="image" src="../images/text_button.png" title="Text [T]"/>
-            <input id="shape_color" type="image" src="../images/shape_color_button.png" title="Shape Color [S]"/>
-            <input id="bucket_color" type="image" src="../images/bucket_button.png" title="Bucket Color [D]"/>
-            <input id="eraser" type="image" src="../images/eraser_button.png" title="Eraser [F]"/>
-            <input id="color" type="color" value="#FFFFFF" title="Color Picker"/>
+            <div id="shapes" class="shapes">
+                <input class = "shape_tools" id="undo" type="image" src="../images/undo_button.png" title="Undo [CTRL+Z]"/>
+                <input class = "shape_tools" id="redo" type="image" src="../images/redo_button.png" title="Redo [CTRL+Y]"/>
+                <input class = "shape_tools" id="line" type="image" src="../images/line_button.png" title="Line [Q]"/>
+                <input class = "shape_tools" id="rect" type="image" src="../images/rect_button.png" title="Rect [W]"/>
+                <input class = "shape_tools" id="triangle" type="image" src="../images/triangle_button.png" title="Triangle [E]"/>
+                <input class = "shape_tools" id="circle" type="image" src="../images/circle_button.png" title="Circle [R]"/>
+                <input class = "shape_tools" id="rectF" type="image" src="../images/rectF_button.png" title="Rect Full [W]"/>
+                <input class = "shape_tools" id="triangleF" type="image" src="../images/triangleF_button.png" title="Triangle Full [E]"/>
+                <input class = "shape_tools" id="circleF" type="image" src="../images/circleF_button.png" title="Circle Full [R]"/>
+                <input class = "shape_tools" id="text" type="image" src="../images/text_button.png" title="Text [T]"/>
+                <input class = "shape_tools" id="shape_color" type="image" src="../images/shape_color_button.png" title="Shape Color [S]"/>
+                <input class = "shape_tools" id="bucket_color" type="image" src="../images/bucket_button.png" title="Bucket Color [D]"/>
+                <input class = "shape_tools" id="eraser" type="image" src="../images/eraser_button.png" title="Eraser [F]"/>
+                <input class = "shape_tools" id="color" type="color" value="#FFFFFF" title="Color Picker"/>
+            </div>
+            
+            <!-- <div style="height: 100px;width: 100px;overflow:auto; scrollbar-base-color:gold"> -->
+            <div id="canvas_div">
+                <canvas id="canvas" width="864px" height="480px"></canvas>
+                <div id="position">(0,0)</div> 
+            </div>
+            
+
         </div>
         
-        <div>
-            <canvas id="canvas" width="864px" height="480px"></canvas>
-            <div id="position">(0,0)</div> 
-        </div>
 
         
         
         <div>
             <section id="outputSet">
 
-                <input id="copy" type="image" src="../images/copy_button.png" title="Copy Code to Clipboard"/>
-                <div class="tools">
+                <input class="output_tools" id="copy" type="image" src="../images/copy_button.png" width="40px" height="40px" title="Copy Code to Clipboard"/>
+                <div class="output_tools">
                     <label for="char_count">Char Count:</label>
                     <br>
                     <label id="char_count_number">-</label>
                 </div>
-                <div class="tools">
+                <div class="output_tools">
                     <label for="gamma">Color Fix:</label>
                     <br>
                     <input type="checkbox" id="gamma" name="gamma" title="Color Correction for SW screens (thanks XLjedi)" checked>
                 </div>
-                <div class="tools">
+                <div class="output_tools">
                     <label for="compact">Compact:</label>
                     <br>
                     <input type="checkbox" id="compact" name="compact" title="Reduce the number of characters in script" checked>
                 </div>
-                <div class="tools">
+                <div class="output_tools">
                     <label for="shapeF fix">Filled-Shape Fix:</label>
                     <br>
                     <input type="checkbox" id="shapeF fix" name="shapeF fix" title="Every Graphics Card displays full-shapes differently, this adds .5 to 'Y' to fix that issue" checked>
                 </div>
-                <div class="tools">
+                <div class="output_tools">
                     <label for="function mode">Function Mode:</label>
                     <br>
                     <input type="checkbox" id="function mode" name="function mode" title="Make it a function with arguments X,Y, to change its position" checked>

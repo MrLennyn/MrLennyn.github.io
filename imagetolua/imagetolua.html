@@ -18,20 +18,14 @@
     </head>
     <body>
         <header>
-            <ul>
-                <li><a href = "../index.html">Home</a></li>
-                <li><a href = "imagetolua.html">Image Lua Converter</a></li>
-                <li><a href = "../canvas/canvas.html">Drawing Canvas</a></li>
-                <li><a href = "../links/links.html">Links</a></li>
-                <li><a href = "help.html">Help</a></li>
-                
-            </ul>
-            <h1>Image-Lua-Converter</h1>
+            <div class="links">
+                <a href = "../index.html">Home</a>
+                <a href = "imagetolua.html" style="background-color: rgb(40, 46, 52)">Image Lua Converter</a>
+                <a href = "../canvas/canvas.html">Drawing Canvas</a>
+                <a href = "../links/links.html">Links</a>
+                <a href = "help.html">Help</a>
+            </div>
         </header>
-        <nav>
-            
-            
-        </nav>
         <p>
             Image to Lua converter with great performance. Able to draw to tens of screens without TPS drops.<br>
             If this doesn't work for you, check the Links tab, there are similar tools made by the community.<br>
@@ -43,15 +37,13 @@
                 <br><img id="myImg" src="#">
             </div>
             <div id= "info">
-                
-                <p id = "color_count" ></p>
-                <p id = "width" ></p>
-                <p id = "height" ></p>
+                <div id = "color_count" ></div>
+                <div id = "width" ></div>
+                <div id = "height" ></div>
             </div>
         </div>
         <div id="codediv">
-            <div id="buttondiv">
-            </div>
+            <div id="buttondiv"></div>
         </div>
         <canvas id="image_canvas" hidden ></canvas>
     </body>
