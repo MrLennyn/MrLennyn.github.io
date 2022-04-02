@@ -126,7 +126,7 @@ window.addEventListener("load", () =>{
     //grid
     function drawGrid() {
         if (grid_checkbox.checked) {
-            ctx.fillStyle = '#303030';
+            ctx.fillStyle = '#101010';
             
             for (let x = 0; x < screenWidth; x++) {
                 ctx.fillRect(x * pixelSize, 0, 2 , canvas.height)
@@ -1380,7 +1380,7 @@ window.addEventListener("load", () =>{
     
 
     var letters = {
-        //each one of this numbers is a square in the 4x5 grid that represents each letter. 0,0 being 1, 4,5 being 20.
+        //each one of this numbers is a square in the 4x5 grid that represents each letter. (0,0) being 1, (4,5) being 20.
         "0": [2,3,5,7,8,9,10,12,13,16,18,19],
         "1": [2,5,6,10,14,18],
         "2": [2,3,5,8,11,14,17,18,19,20],
