@@ -29,6 +29,14 @@
 
         <div id="workspace">
             <div id="options_box">
+                <div class="tools" id="save_load">
+                    <input class = "shape_tools" id="save_button" type="image" src="../images/save_button.png" title="Save File"/>
+                    <label for="load_button">
+                        <input class = "shape_tools" id="load_button" type="file" accept=".txt" style="display: none;"/>
+                        <img class = "shape_tools" id="load_button_img" src="../images/upload_button.png" title="Load File"/>
+                    </label>
+                    
+                </div>
                 <div class="tools">
                     <label for="scale">Zoom:</label>
                     <br>
@@ -133,10 +141,10 @@
     </body>
     <script src = "canvas.js"></script>
 
-    <input type="text" id="inputText" name="inputText" size="10">
-    <!-- <div id="inputTextDiv">
-        
-    </div> -->
+    
+    <div id="inputTextDiv">
+        <input type="text" id="inputText" name="inputText" size="10">
+    </div>
         
 
 </html>

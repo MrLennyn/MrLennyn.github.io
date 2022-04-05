@@ -83,6 +83,8 @@ a:hover {
     margin-left: 0px;
 }
 
+
+
 #shapes {
     display: flex;
     flex-direction: row;
@@ -113,6 +115,20 @@ a:hover {
     border: 2px solid var(--border_color);
     width: 100px;
     height: 35px;
+}
+
+#save_load {
+    display: flex;
+    flex-direction: row;
+    padding-left: 2px;
+}
+
+#save_load input {
+    width: 25px;
+    height: 25px;
+    padding: 3px;
+    margin: 2px;
+    border: 2px solid var(--border_color);
 }
 
 #canvas {
@@ -166,6 +182,17 @@ a:hover {
     margin-left: 0px;
 }
 
+/* #inputTextDiv {
+    display: none;
+    background-color: rgb(241, 241, 241);
+    color: black;
+    border: 2px solid var(--border_color);
+    padding: 2px;
+    position: fixed;
+    width: 150px;
+    height: 150px;
+} */
+
 #inputText {
     display: none;
     background-color: rgb(241, 241, 241);
@@ -173,6 +200,7 @@ a:hover {
     border-left: 2px solid var(--border_color);
     padding: 0;
     position: fixed;
+    /* width: 150px; */
     top: 120px;
     left: 120px;
 }

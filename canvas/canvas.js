@@ -43,6 +43,8 @@ window.addEventListener("load", () =>{
 
     const ref_img = document.getElementById("refimage")
 
+    const save_button = document.getElementById("save_button")
+    const load_button = document.getElementById("load_button")
     const scale = document.getElementById("scale")
     const grid_checkbox = document.getElementById("grid")
     const screen_select = document.getElementById("screen")
@@ -353,7 +355,7 @@ window.addEventListener("load", () =>{
 
         /* console.log("line",color,x, y, w, h) */
 
-        shapes.push(tool, color, cord1, cord2, cord3, "")
+        shapes.push(tool, color, cord1, cord2, cord3, "_")
     }
 
     function pushCircle(x1,y1,x2,y2) {
@@ -375,7 +377,7 @@ window.addEventListener("load", () =>{
 
         r = Math.abs(r)
     
-        shapes.push(tool, color, x, y, r, "")
+        shapes.push(tool, color, x, y, r, "_")
     }
 
     function pushText(x,y,text) {
@@ -383,7 +385,7 @@ window.addEventListener("load", () =>{
             return
         }
 
-        shapes.push(tool, color, x, y, text, "")
+        shapes.push(tool, color, x, y, text, "_")
     }
 
     //Event Listeners
@@ -393,6 +395,8 @@ window.addEventListener("load", () =>{
     canvas.addEventListener("mousemove",cursor);
 
     //tools
+    save_button.addEventListener("click",saveDataToFile);
+    load_button.addEventListener("change",loadDataFromFile)
     scale.addEventListener("change",changeScale);
     grid_checkbox.addEventListener("change",changeGrid);
     screen_select.addEventListener("change",changeScreenSize);
@@ -1707,7 +1711,42 @@ window.addEventListener("load", () =>{
         navigator.clipboard.writeText(copy_string)
     }
     
+    function downloadToFile(content, filename, contentType) {
+        //https://robkendal.co.uk/blog/2020-04-17-saving-text-to-client-side-file-using-vanilla-js
+        const a = document.createElement('a');
+        const file = new Blob([content], {type: contentType});
+        
+        a.href= URL.createObjectURL(file);
+        a.download = filename;
+        a.click();
+      
+        URL.revokeObjectURL(a.href);
+      };
 
+    function saveDataToFile() {
+        if (shapes.length > 0) {
+            let name = window.prompt("Name your save file","drawing_canvas_save");
+
+            let jsonData = JSON.stringify(shapes);
+
+            if (name) {
+                downloadToFile(jsonData, name + '.txt', 'text/plain');
+            }
+        }
+    }
+
+    function loadDataFromFile() {
+        var fr=new FileReader();
+        fr.onload=function(){
+            //console.log(fr.result)
+            shapes = []
+            shapes = JSON.parse(fr.result)
+            clearRedo()
+            draw()
+            outputCode()
+        }
+        fr.readAsText(this.files[0]);
+    }
 });
 
 window.onbeforeunload = e => {
