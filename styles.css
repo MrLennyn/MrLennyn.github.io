@@ -132,6 +132,8 @@ a:hover {
 }
 
 #canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
     background-color: black;
     margin: 5px 5px 0px 5px;
     border: 2px solid var(--border_color);

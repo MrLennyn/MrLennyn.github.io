@@ -5,9 +5,9 @@
         +-RectFull
         +-Triangle
         +-TriangleFull
-        +Circle
-        +CircleFull
-        +Text
+        +-Circle
+        +-CircleFull
+        +-Text
         -TextBox
     options:
         +-Scale (change pixelSize)
@@ -78,8 +78,6 @@ window.addEventListener("load", () =>{
     const inputTextBox = document.getElementById("inputText")
     /* const inputTextDiv = document.getElementById("inputTextDiv") */
 
-
-
     ctx.imageSmoothingEnabled = false;
 
     let pixelSize = 8
@@ -130,10 +128,10 @@ window.addEventListener("load", () =>{
         if (grid_checkbox.checked) {
             ctx.fillStyle = '#101010';
             
-            for (let x = 0; x < screenWidth; x++) {
+            for (let x = 0; x < screenSizeW; x++) {
                 ctx.fillRect(x * pixelSize, 0, 2 , canvas.height)
             }
-            for (let y = 0; y < screenHeight; y++) {
+            for (let y = 0; y < screenSizeH; y++) {
                 ctx.fillRect(0, y * pixelSize, canvas.width , 2)
             }
 
@@ -1080,6 +1078,7 @@ window.addEventListener("load", () =>{
     }
 
     function drawRefImage() {
+        ctx.imageSmoothingEnabled = false;
         if (!hide_image_checkbox.checked) {
             if (img) {
                 ctx.drawImage(img, 0, 0, screenWidth, screenHeight, 0, 0, screenWidth * pixelSize, screenHeight * pixelSize);
@@ -1134,6 +1133,8 @@ window.addEventListener("load", () =>{
         } else if (e.target.id) {
             tool = e.target.id
         }
+
+        inputTextEntered() //this line fixes a bug where input text would stay on screen when changing tools
 
         document.getElementById("line").style.backgroundColor = "#EFEFEF"
         document.getElementById("rect").style.backgroundColor = "#EFEFEF"
@@ -1380,8 +1381,6 @@ window.addEventListener("load", () =>{
             }
         }
     }
-
-    
 
     var letters = {
         //each one of this numbers is a square in the 4x5 grid that represents each letter. (0,0) being 1, (4,5) being 20.
@@ -1812,7 +1811,6 @@ function lerp(start, end, t) {
 
 let gamaFix = 1.1
 function gFix(color) { //by XLjedi
-
     color = Math.floor(color**gamaFix/255**gamaFix*color)
     return color
 }

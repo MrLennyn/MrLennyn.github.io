@@ -32,8 +32,12 @@
             Check the Help tab for more information on this tool.<br>
         </p>
         <div id = "top">
+            <div class = "tools">
+                <input type="number" id="gamma_fix" name="gama_fix" value="1.1" title="Color Correction Factor. A factor between 1.0 and 2.0 is recommended (gamma function by XLjedi)" style="width: 40px;">
+                <label for="gamma_fix" title="Color Correction Factor. A factor between 1.0 and 2.0 is recommended (gamma function by XLjedi)">Gamma-Fix Factor:</label>
+            </div>
             <div id = "imagediv">
-                <br><input type="file" id="image" accept=".png">
+                <br><input type="file" id="image" accept=".PNG">
                 <br><img id="myImg" src="#">
             </div>
             <div id= "info">

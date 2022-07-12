@@ -4,10 +4,9 @@ var outputString = ""
 
 var gamaFix = 1.1
 
-window.addEventListener('load', function() {
-document.querySelector('input[type="file"]').addEventListener('change', function() {
+window.addEventListener('load', function() { //On page load
+document.querySelector('input[type="file"]').addEventListener('change', function() { //On Image Upload
     if (this.files && this.files[0]) {
-
         //to reset the width and height every time a new photo is uploaded
         //we're getting dimensions from the img element, then resizing it smaller, then setting up a canvas with original dimensions to get imageData from
         document.getElementById("myImg").setAttribute("width", " ")
@@ -21,8 +20,10 @@ document.querySelector('input[type="file"]').addEventListener('change', function
             //removing copy buttons
             document.getElementById("buttondiv").innerHTML = ""
 
-            
-            var colorArray = [] //holds the colors as a string
+            gamaFix = document.getElementById("gamma_fix").value
+            console.log(gamaFix)
+
+            var colorArray = [] //holds the colors as strings
             var arrayFinal = [] //holds the final values: [r,g,b,a,x,y,h,w,x1,y1,h1,w1,x2,y2,h2,w,2]
             
 
@@ -107,7 +108,7 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                         if (current_color == next_color && x < img_width - 1) {//-1 may no be needed, idk
                             line_length++ //if color and next are equal, line_length increases
                         } else if (line_length > 1) {
-                            temp_array.push(x + 1 - line_length); //what does this do?
+                            temp_array.push(x + 1 - line_length);
                             temp_array.push(y);
                             temp_array.push(line_length);
                             line_length = 1;
@@ -123,8 +124,6 @@ document.querySelector('input[type="file"]').addEventListener('change', function
 
                 
                 }
-                /* console.log(colorArray[col] + " line")
-                console.log(temp_array) */
 
                 //Making Rectangles:
                 //for every pixel_line in temp_array, check until you find one with the same X value, and a y value that is y1+rectheight = y2
@@ -164,19 +163,15 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                         if (insideRect(lx,ly,rx,ry,rw,rh)){ //if our pixel is inside any rectangle from our temp_rect_array it won't be pushed into the array
                              inRect = true;
                         }
-                        
                     }
 
                     if (!inRect) {
-                        
                         temp_rect_array.push(lx); //x
                         temp_rect_array.push(ly); //y
                         temp_rect_array.push(len); //width
                         temp_rect_array.push(rectH); //height
                     }
                 }
-               /*  console.log(colorArray[col] + " rect");
-                console.log(temp_rect_array); */
 
                 //final-array pushing
                 for (c = 0; c < arrayFinal.length; c++) {
@@ -188,24 +183,17 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                         }
                     }
                 }
-
-                
             }
-            /* console.log("arrayFinal")
-            console.log(arrayFinal) */
 
-             //A Hack: when img is only one color, array comes out empty. Here we make a single square for the whole img to fix that. 
+            //A Hack: when img is only one color, array comes out empty. Here we make a single square for the whole img to fix that. 
             if (arrayFinal.length == 0) {
                 let r = gFix(imgdata.data[0]);
                 let g = gFix(imgdata.data[1]);
                 let b = gFix(imgdata.data[2]);
                 let a = imgdata.data[3];
 
-                //console.log(img_width,img_height)
                 lulalala = [r,g,b,a,0,0,img_width,img_height]
-                //arrayFinal = [r,g,b,a,0,0,img_width,img_height]
                 arrayFinal.push([r,g,b,a,0,0,img_width,img_height])
-                //console.log(arrayFinal)
                 
             }
 
@@ -215,15 +203,12 @@ document.querySelector('input[type="file"]').addEventListener('change', function
             for (k = 0; k < arrayFinal.length; k++) {
                 outputString = outputString + "{" + arrayFinal[k].join() + "}" + ","
             }
-
             
-            //console.log(arrayFinal)
-            
-            let renderString = " function onDraw() for i=1,#p do s.setColor(p[i][1],p[i][2],p[i][3],p[i][4]) for w=5,#p[i],4 do s.drawRectF(p[i][w],p[i][w+1],p[i][w+2],p[i][w+3]) end end end"
+            let renderString = " function onDraw() for i=1,#p do s.setColor(p[i][1],p[i][2],p[i][3],p[i][4]) for w=5,#p[i],4 do s.drawRectF(p[i][w],p[i][w+1]+0.5,p[i][w+2],p[i][w+3]) end end end"
             let limit = 4096 - renderString.length - 15
             outputStringArray = []
-            //script division: 4096
-            //if (outputString.length + renderString.length > 4096) { //if output needs to be divided
+
+            //Dividing String into multiple scripts, if needed.
             if (outputString.length > limit) {  
 
                 let tableSize = outputString.length;
@@ -236,9 +221,6 @@ document.querySelector('input[type="file"]').addEventListener('change', function
 
                 for (k = 0; k < arrayFinal.length; k++) {
                     let arrayColorLength = arrayFinal[k].join().length
-
-                    //console.log("color", arrayFinal[k][0], arrayFinal[k][1], arrayFinal[k][2], arrayFinal[k][3],)
-                    //console.log(arrayFinal[k])
 
                     if (arrayColorLength > limit) { //check for too big of an image
                         console.log("Color String Error - color array bigger than 4096")
@@ -318,15 +300,15 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                         
                     }
                 }
+
                 //output multiple scripts to html
-                //console.log(outputStringArray.length)
                 for (n = 0; n < outputStringArray.length; n++) {
                     var element = document.createElement("button");
                     element.appendChild(document.createTextNode('Copy Script ' + (n + 1) ));
                     document.getElementById('buttondiv').appendChild(element);
                 }
 
-                //output single script to html
+            //output single script to html
             } else {
                 outputString = "s=screen p={" + outputString + "}";
                 outputString = outputString + renderString
@@ -346,10 +328,8 @@ document.querySelector('input[type="file"]').addEventListener('change', function
             console.log(outputString)
 
             
-        } //end of onload
+        } //end of Image Proccesing and onLoad()
         
-
-        //navigator.clipboard.writeText("hello there")
         img.src = URL.createObjectURL(this.files[0]); 
        
     }
@@ -363,24 +343,16 @@ document.querySelector('input[type="file"]').addEventListener('change', function
                         console.log(outputStringArray[n].length)
                         navigator.clipboard.writeText(outputStringArray[n])
                         evt.target.style.backgroundColor = "rgb(200, 250, 200)"
-                        /* console.log("pressed") */
                     }
-            
                 }
             } else {
                 navigator.clipboard.writeText(outputString)
-                /* console.log("pressed") */
                 evt.target.style.backgroundColor = "rgb(200, 250, 200)"
             }
         }
-        
     }, false);
 
-
-
-    
 });
-
 });
 
 function insideRect(x,y,rx,ry,w,h) {
@@ -388,7 +360,6 @@ function insideRect(x,y,rx,ry,w,h) {
         return true;
     }
     return false;
-
 }
 
 function gFix(color) {
