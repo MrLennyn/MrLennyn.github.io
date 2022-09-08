@@ -232,6 +232,7 @@ a:hover {
 
 #code_options_menu {
     display: none;
+    width: 250px;
 }
 
 /* #inputTextDiv {

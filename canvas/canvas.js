@@ -41,6 +41,7 @@ window.addEventListener("load", () =>{
     const move_shape = document.getElementById("move_shape")
 
     const copy_button = document.getElementById("copy")
+    const color_factor = document.getElementById("gamma_factor")
     const color_fix = document.getElementById("gamma")
     const color_grouping = document.getElementById("color_grouping")
     const compact = document.getElementById("compact")
@@ -53,7 +54,7 @@ window.addEventListener("load", () =>{
 
     const inputTextBox = document.getElementById("inputText")
 
-
+    
 
     ctx.imageSmoothingEnabled = false;
 
@@ -445,6 +446,7 @@ window.addEventListener("load", () =>{
 
 
     copy_button.addEventListener("click",copyText);
+    color_factor.addEventListener("input",color_factor_change)
     color_fix.addEventListener("change",outputCode);
     color_grouping.addEventListener("change",outputCode)
     compact.addEventListener("change",outputCode);
@@ -524,6 +526,12 @@ window.addEventListener("load", () =>{
             changeTool("", "push_back")
         } else if (event.key === 'm') {
             changeTool("", "push_forward")
+        } else if (event.key === ' ') { //space bar
+            // if we press space, cancel action
+            mouseDown = false
+            startPixel = []
+            triangle_mouse = [null,null,null,null,null,null]
+            draw()
         }
     });
 
@@ -2266,6 +2274,13 @@ window.addEventListener("load", () =>{
             }
         }
     }
+
+    function color_factor_change() {
+        let gamaHTML = document.getElementById("gamma_html")
+        let gamaFix = document.getElementById("gamma_factor").value
+        gamaHTML.innerHTML = "Color Factor: " + gamaFix + " "
+        outputCode()
+    }
     
 });
 
@@ -2317,8 +2332,11 @@ function lerp(start, end, t) {
     return start + t * (end-start);
 }
 
-let gamaFix = 1.3
+
+
+
 function gFix(color) { //by XLjedi
+    let gamaFix = document.getElementById("gamma_factor").value
     color = Math.floor(color**gamaFix/255**gamaFix*color)
     return color
 }

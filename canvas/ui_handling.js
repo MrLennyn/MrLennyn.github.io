@@ -13,7 +13,7 @@ const canvas_menu_offset = 25
 
 var code_menu_button = document.getElementById("code_menu_button")
 var code_menu_box = document.getElementById("code_options_menu")
-const code_menu_offset = -300
+const code_menu_offset = -350
 
 window.addEventListener("mouseup", function(e) {
     if (!inRect(e, canvas_menu_button)) {
