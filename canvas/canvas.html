@@ -69,7 +69,7 @@
                     </div>
                     <div>
                         <input class = "shape_tools" id="text" type="image" src="images/text_button.png" title="[T] Text"/>
-                        <input class = "shape_tools" id="eyedrop" type="image" src="images/eyedrop_button.png" title="[C] Eyedrop"/>
+                        <input class = "shape_tools" id="eyedrop" type="image" src="images/eyedrop_button.png" title="[X] Eyedrop"/>
                     </div>
                     <div>
                         <input class = "shape_tools" id="push_back" type="image" src="images/push_back_button.png" title="[N] Push Shape Back"/>
@@ -138,34 +138,68 @@
 
             <div id="code_options_menu" class="options_menu">
                 <div class="menu">
-                    <label id="gamma_html" for="gamma_factor"> Color Factor: 1.3</label>
-                    <br>
-                    <input type="range" min="1" max="3" step="0.1" value="1.3" id="gamma_factor" name="gamma_factor" style="width: 60px; margin-left: 20px;" title="Change slider to calibrate your colors">
+                    <div class="menu_start">
+                        <img class="info_symbol" src="images/information.png" 
+title="This slider will change the 'Color Fix' output colors.
+Defaults to 1.3
+Mostly affects the brightness and contrast.">
+                        <label id="gamma_html" for="gamma_factor">Color Factor: 1.3</label>
+                    </div>
+                    <input type="range" min="1" max="3" step="0.1" value="1.3" id="gamma_factor" name="gamma_factor" style="width: 60px; margin-left: 20px;">
                 </div>
                 <div class="menu">
-                    <label for="gamma">Color Fix:</label>
-                    <br>
-                    <input type="checkbox" id="gamma" name="gamma" title="Color Correction for SW screens (thanks to XLjedi)" checked>
+                    <div class="menu_start">
+                        <img class="info_symbol" src="images/information.png" 
+title="Color Correction to better match Stormworks screens colors.
+Thanks to XLjedi's gamma-fix formula.">
+                        <label for="gamma">Color Fix:</label>
+                    </div>
+                    <input type="checkbox" id="gamma" name="gamma" checked>
                 </div>
                 <div class="menu">
-                    <label for="color_grouping">Color Grouping:</label>
-                    <br>
-                    <input type="checkbox" id="color_grouping" name="color_grouping" title="Groups shapes by color, ignoring drawing order" checked>
+                    <div class="menu_start">
+                        <img class="info_symbol" src="images/information.png" 
+title="Groups shapes by color, saving some space. 
+Ignores the order at which you drew the shapes,
+it can make your drawings look different in game">
+                        <label for="color_grouping">Color Grouping:</label>
+                    </div>
+                    <input type="checkbox" id="color_grouping" name="color_grouping">
                 </div>
                 <div class="menu">
-                    <label for="compact">Compact:</label>
-                    <br>
-                    <input type="checkbox" id="compact" name="compact" title="Reduce the number of characters in script" checked>
+                    <div class="menu_start">
+                        <img class="info_symbol" src="images/information.png" 
+title="Reduce the number of characters in a script,
+by shortening function names.
+(example: SC = screen.setColor)
+Saves many characters">
+                        <label for="compact">Compact:</label>
+                    </div>
+                    <input type="checkbox" id="compact" name="compact" checked>
                 </div>
                 <div class="menu">
-                    <label for="shapeF fix">Filled-Shape Fix:</label>
-                    <br>
-                    <input type="checkbox" id="shapeF fix" name="shapeF fix" title="Every Graphics Card displays full-shapes differently, this adds .5 to 'Y' to fix that issue" checked>
+                    <div class="menu_start">
+                        <img class="info_symbol" src="images/information.png" 
+title="AMD cards draw full-shapes differently,
+this adds +0.5 vertically to rectF, circleF,
+and triangleF, in order to make your drawings
+compatible with both NVIDIA and AMD.
+But it takes extra characters.">
+                        <label for="shapeF fix">AMD compatible:</label>
+                    </div>
+                    <input type="checkbox" id="shapeF fix" name="shapeF fix" checked>
                 </div>
                 <div class="menu">
-                    <label for="function mode">Function Mode:</label>
-                    <br>
-                    <input type="checkbox" id="function mode" name="function mode" title="Make it a function with arguments X,Y, to change its position">
+                    <div class="menu_start">
+                        <img class="info_symbol" src="images/information.png" 
+title="Turn your drawing into a function
+with (X, Y) arguments. Allowing you to
+use your drawing multiple times, and
+change it's position dynamically.
+But it takes many more characters.">
+                        <label for="function mode">Function Mode:</label>
+                    </div>
+                    <input type="checkbox" id="function mode" name="function mode">
                 </div>
             </div>
         </div>
@@ -178,7 +212,21 @@
 
     
     <div id="inputTextDiv">
+        <div style="width: 20px ; height: 30px;"></div> <!-- This is a filled to ocupy inputTexts space -->
         <input type="text" id="inputText" name="inputText" size="10">
+        
+        <div class="inputTextOptions">
+            <img class="info_symbol" src="images/information.png" title="Alyosha15's 3x4 font. Only 400 characters!">
+            <label for="small_font">3x4:</label>
+            <input type="checkbox" id="small_font" name="small_font">
+        </div>
+        
+        
+        
+        
+
+
+       <!--  <input class = "shape_tools" id="undo" type="image" src="images/undo_button.png" title="[CTRL+Z] Undo"/> -->
     </div>
         
 

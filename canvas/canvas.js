@@ -52,7 +52,9 @@ window.addEventListener("load", () =>{
 
     const position_indicator = document.getElementById("position")
 
+    const inputTextDiv = document.getElementById("inputTextDiv")
     const inputTextBox = document.getElementById("inputText")
+    const small_font = document.getElementById("small_font")
 
     
 
@@ -167,10 +169,22 @@ window.addEventListener("load", () =>{
                 inputTextActive = true
 
                 let ctxOffsets = canvas.getBoundingClientRect();
+                
+                inputTextDiv.style.position = 'fixed'
+                inputTextDiv.style.display = 'block'
+                inputTextDiv.style.top = (e.offsetY + ctxOffsets.top - 5) + 'px'
+                inputTextDiv.style.left = (e.offsetX + ctxOffsets.left - 5) + 'px'
+
                 inputTextBox.style.position = 'fixed'
                 inputTextBox.style.display = 'block'
                 inputTextBox.style.top = (e.offsetY + ctxOffsets.top) + 'px'
                 inputTextBox.style.left = (e.offsetX + ctxOffsets.left) + 'px'
+
+                /* inputTextBox.style.position = 'fixed'
+                inputTextBox.style.display = 'block'
+                inputTextBox.style.top = (e.offsetY + ctxOffsets.top) + 'px'
+                inputTextBox.style.left = (e.offsetX + ctxOffsets.left) + 'px' */
+
                 //this gotta be here otherwise focus() won't do the thing
                 window.setTimeout(function() {document.getElementById("inputText").focus()},0)
                 
@@ -287,6 +301,13 @@ window.addEventListener("load", () =>{
         drawRefImage()
         drawGrid()
 
+        /* drawSmallText("#FFFFFF", 0, 0, "0123456789")
+        drawSmallText("#FFFFFF", 0, 5, "abcdefghijklm")
+        drawSmallText("#FFFFFF", 0, 10, "nopqrstuvwxyz")
+        drawSmallText("#FFFFFF", 0, 15, " !.,?:;'\"_")
+        drawSmallText("#FFFFFF", 0, 20, "|-=+*<>()\\/")
+        drawSmallText("#FFFFFF", 0, 25, "{}[]@#$%^&~") */
+
         innerBand = pixelSize/3
 
         for (var i = 0; i < shapes.length; i += 6) { //[0]tool, [1]hex_color, [2,3,4,5]coordinates
@@ -324,6 +345,8 @@ window.addEventListener("load", () =>{
                 drawCircleF(s_color, x, y, w)
             } else if (s_tool == "text") {
                 drawText(s_color, x-1, y-1, w) //w is text string
+            } else if (s_tool == "small_text") {
+                drawSmallText(s_color, x-1, y-1, w) //w is text string
             }
         }
     }
@@ -406,8 +429,12 @@ window.addEventListener("load", () =>{
         if (x == null || y == null) { //checking its not NaN
             return
         }
-
-        shapes.push(tool, color, x, y, text, "_")
+        if (small_font.checked) {
+            shapes.push("small_text", color, x, y, text, "_")
+        } else {
+            shapes.push(tool, color, x, y, text, "_")
+        }
+        
     }
 
     //Event Listeners
@@ -520,7 +547,7 @@ window.addEventListener("load", () =>{
             changeTool("", "eraser")
         } else if (event.key === 'a') {
             changeTool("", "move_shape")
-        } else if (event.key === 'c') {
+        } else if (event.key === 'x') {
             changeTool("", "eyedrop")
         } else if (event.key === 'n') {
             changeTool("", "push_back")
@@ -536,10 +563,20 @@ window.addEventListener("load", () =>{
     });
 
     function inputTextEntered(e) {
+        inputTextDiv.style.position = 'fixed'
+        inputTextDiv.style.display = 'none'
+        inputTextDiv.style.top = 0 + 'px'
+        inputTextDiv.style.left = 0 + 'px'
+
         inputTextBox.style.position = 'fixed'
         inputTextBox.style.display = 'none'
         inputTextBox.style.top = 0 + 'px'
         inputTextBox.style.left = 0 + 'px'
+
+        /* inputTextBox.style.position = 'fixed'
+        inputTextBox.style.display = 'none'
+        inputTextBox.style.top = 0 + 'px'
+        inputTextBox.style.left = 0 + 'px' */
         let text = inputTextBox.value
         if (inputTextBox.value.length > 0) {
             pushText(inputTextPos[0],inputTextPos[1],text)
@@ -983,6 +1020,11 @@ window.addEventListener("load", () =>{
                     drawText(color, x1-1, y1-1, x2)
                     break
                 }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
+                    drawSmallText(color, x1-1, y1-1, x2)
+                    break
+                }
             }
             
         }
@@ -1048,6 +1090,11 @@ window.addEventListener("load", () =>{
                     lets_change = hex_color
                     break
                 }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
+                    lets_change = hex_color
+                    break
+                }
             }
         }
         if (lets_change) {
@@ -1100,6 +1147,8 @@ window.addEventListener("load", () =>{
 
                     } else if (tool_type == "text") {
                         drawText(color, x1-1, y1-1, x2)
+                    } else if (tool_type == "small_text") {
+                        drawSmallText(color, x1-1, y1-1, x2)
                     }
                     
                 }
@@ -1183,6 +1232,11 @@ window.addEventListener("load", () =>{
             } else if (tool_type == "text") {
                 if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
                     drawText(cursorColor, x1-1, y1-1, x2)
+                    break
+                }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
+                    drawSmallText(cursorColor, x1-1, y1-1, x2)
                     break
                 }
             }
@@ -1359,6 +1413,11 @@ window.addEventListener("load", () =>{
                     shapes[i+1] = color
                     break
                 }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
+                    shapes[i+1] = color
+                    break
+                }
             }
         }
     }
@@ -1419,6 +1478,11 @@ window.addEventListener("load", () =>{
                 }
             } else if (tool_type == "text") {
                 if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
+                    lets_change = hex_color
+                    break
+                }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
                     lets_change = hex_color
                     break
                 }
@@ -1499,6 +1563,12 @@ window.addEventListener("load", () =>{
                     shapes.splice(i, 6)
                     break
                 }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
+                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
+                    shapes.splice(i, 6)
+                    break
+                }
             }
         }
     }
@@ -1556,6 +1626,11 @@ window.addEventListener("load", () =>{
                 }
             } else if (tool_type == "text") {
                 if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
+                    color = hex_color
+                    break
+                }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
                     color = hex_color
                     break
                 }
@@ -1625,6 +1700,11 @@ window.addEventListener("load", () =>{
                     swap_push_back(i)
                     break
                 }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
+                    swap_push_back(i)
+                    break
+                }
             }
         }
     }
@@ -1686,6 +1766,11 @@ window.addEventListener("load", () =>{
                 }
             } else if (tool_type == "text") {
                 if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
+                    swap_push_forward(i)
+                    break
+                }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
                     swap_push_forward(i)
                     break
                 }
@@ -1760,6 +1845,9 @@ window.addEventListener("load", () =>{
                 shapes[i+2] = x
                 shapes[i+3] = y
             } else if (s_tool == "text") {
+                shapes[i+2] = x
+                shapes[i+3] = y
+            } else if (s_tool == "small_text") {
                 shapes[i+2] = x
                 shapes[i+3] = y
             }
@@ -1839,6 +1927,85 @@ window.addEventListener("load", () =>{
         "{": [2,3,6,9,10,14,18,19],
         "}": [1,2,6,10,11,14,17,18],
     }
+
+    var small_letters = {
+        //each one of this numbers is a square in the 3x4 grid that represents each letter. (0,0) being 1, (4,5) being 20.
+        "0": [1,2,3,4,6,7,9,10,11,12],
+        "1": [2,4,5,8,10,11,12],
+        "2": [1,2,3,6,7,8,10,11,12],
+        "3": [1,2,3,5,9,10,11,12],
+        "4": [1,3,4,6,7,8,9,12],
+        "5": [1,2,3,4,5,9,10,11,12],
+        "6": [1,2,3,4,7,8,9,10,11,12],
+        "7": [1,2,3,6,8,11],
+        "8": [1,2,3,4,6,7,8,9,10,11,12],
+        "9": [1,2,3,4,6,7,8,9,12],
+
+        "a": [2,4,6,7,8,9,10,12],
+        "b": [1,2,4,6,7,8,9,10,11],
+        "c": [2,3,4,7,11,12],
+        "d": [1,2,4,6,7,9,10,11],
+        "e": [1,2,3,4,7,8,10,11,12],
+        "f": [1,2,3,4,7,8,10],
+        "g": [2,3,4,7,9,11,12],
+        "h": [1,3,4,6,7,8,9,10,12],
+        "i": [1,2,3,5,8,10,11,12],
+        "j": [3,6,7,9,11],
+        "k": [1,3,4,5,7,8,10,12],
+        "l": [1,4,7,10,11,12],
+        "m": [1,2,3,4,5,6,7,9,10,12],
+        "n": [1,2,3,4,6,7,9,10,12],
+        "o": [2,4,6,7,9,11],
+        "p": [1,2,4,6,7,8,10],
+        "q": [1,2,3,4,6,7,9,10,11],
+        "r": [1,2,4,6,7,8,10,12],
+        "s": [2,3,4,8,9,10,11,12],
+        "t": [1,2,3,5,8,11],
+        "u": [1,3,4,6,7,9,10,11,12],
+        "v": [1,3,4,6,7,9,11],
+        "w": [1,3,4,6,7,8,9,10,11,12],
+        "x": [1,3,4,6,8,10,12],
+        "y": [1,3,4,6,8,11],
+        "z": [1,2,3,5,6,7,8,10,11,12],
+
+        /* " !.,?:;'\"_") */
+        " ": [],
+        "!": [2,5,11],
+        ".": [11],
+        ",": [8,10],
+        "?": [1,2,3,6,11],
+        ":": [2,8],
+        ";": [2,8,10],
+        "'": [2],
+        "\"": [1,3],
+        "_": [10,11,12],
+
+        /*      |-=+*<>()\/     */
+        "|": [2,5,8,11],
+        "-": [7,8,9],
+        "=": [4,5,6,10,11,12],
+        "+": [5,7,8,9,11],
+        "*": [4,6,8,10,12],
+        "<": [5,7,11],
+        ">": [5,9,11],
+        "(": [2,4,7,11],
+        ")": [2,6,9,11],
+        "\\": [1,5,8,12],
+        "/": [3,5,8,10],
+
+        /*     {}[]@#$%^&~     */
+        "{": [2,3,4,5,7,8,11,12],
+        "}": [1,2,5,6,8,9,10,11],
+        "[": [1,2,4,7,10,11],
+        "]": [2,3,6,9,11,12],
+        "@": [2,3,4,6,7,11,12],
+        "#": [1,3,4,5,6,7,8,9,10,12],
+        "$": [2,3,4,5,8,9,10,11],
+        "%": [1,3,5,6,7,8,10,12],
+        "^": [2,4,6],
+        "&": [2,4,6,8,9,10,11,12],
+        "~": [4,5,7,9],
+    }
     
     function drawText(color, x, y, text) {
         ctx.fillStyle = color;
@@ -1855,7 +2022,27 @@ window.addEventListener("load", () =>{
                         let pos = letterPos(letters[key][l])
                         
                         ctx.fillRect((pos[1]+x+(i*5)) * pixelSize + g_offset.x, (pos[2]+y) * pixelSize + g_offset.y, pixelSize, pixelSize);
-                        //ctx.fill()
+                    }
+                }
+            }
+        }
+    }
+
+    function drawSmallText(color, x, y, text) {
+        ctx.fillStyle = color;
+
+        text = text.toLowerCase()
+
+        for (let i = 0; i < text.length; i++) {
+    
+            let char = text.charAt(i)
+    
+            for (let key in small_letters) {
+                if (key == char) {
+                    for (let l = 0; l < small_letters[key].length; l++) {
+                        let pos = smallLetterPos(small_letters[key][l])
+                        
+                        ctx.fillRect((pos[1]+x+(i*4)) * pixelSize + g_offset.x, (pos[2]+y) * pixelSize + g_offset.y, pixelSize, pixelSize);
                     }
                 }
             }
@@ -1879,6 +2066,24 @@ window.addEventListener("load", () =>{
         } else if (x > 16 && x <= 20) {
             pos[1] = x - 16
             pos[2] = 5
+        }
+        return pos
+    }
+
+    function smallLetterPos(x) {
+        let pos = [0,0]
+        if (x <= 3) {
+            pos[1] = x
+            pos[2] = 1
+        } else if (x > 3 && x <= 6) {
+            pos[1] = x - 3
+            pos[2] = 2
+        } else if (x > 6 && x <= 9) {
+            pos[1] = x - 6
+            pos[2] = 3
+        } else if (x > 9 && x <= 12) {
+            pos[1] = x - 9
+            pos[2] = 4
         }
         return pos
     }
@@ -2012,7 +2217,8 @@ window.addEventListener("load", () =>{
             circle_string = "DC(";
             circleF_string = "DCF(";
             text_string = "DTX(";
-            
+            small_text_string = "txt(";
+
             let to_add = []
             for (let i = 0; i < output_shapes.length; i += 6) {
                 let tool_type = output_shapes[i+0]
@@ -2032,7 +2238,7 @@ window.addEventListener("load", () =>{
                     to_add.push("DCF=S.drawCircleF")
                 } else if (tool_type == "text" && !inString("DTX=S.drawText", to_add)) {
                     to_add.push("DTX=S.drawText")
-                }
+                } 
             }
 
             final_string = final_string + "S=screen<br>SC=S.setColor<br>"
@@ -2063,6 +2269,7 @@ window.addEventListener("load", () =>{
             circle_string = "screen.drawCircle(";
             circleF_string = "screen.drawCircleF(";
             text_string = "screen.drawText(";
+            small_text_string = "txt(";
         }
 
         for (let i = 0; i < output_shapes.length; i += 6) {
@@ -2152,11 +2359,49 @@ window.addEventListener("load", () =>{
                 } else {
                     tool_string = text_string + x1 + "," + y1 + "," + "\"" + x2 + "\"" + ")"
                 }
+            } else if (tool_type == "small_text") { //x2 is text
+                if (function_mode.checked) {
+                    tool_string = small_text_string + x1 + "+x," + y1 + "+y," + "\"" + x2 + "\"" + ")"
+                } else {
+                    tool_string = small_text_string + x1 + "," + y1 + "," + "\"" + x2 + "\"" + ")"
+                }
             }
             final_string = final_string + tool_string + "<br>"
         }
         
         final_string = final_string + "<br>end"
+
+        
+        // finding small_font text and adding the function
+        let small_font_function
+        let found_line = false
+        if (compact.checked) {
+            for (let i = 0; i < shapes.length; i += 6) {
+                let tool_type = shapes[i+0]
+                if (tool_type == "line") {
+                    found_line = true
+                    small_font_function = '<br><br>Z=string <br>'
+                    break
+                }
+            }
+            if (!found_line) {
+                small_font_function = '<br><br>DL=S.drawLine<br>Z=string<br>'
+            }
+            small_font_function += 'function txt(x,y,t)for i=1,Z.len(t)do c=t:sub(i,i):upper():byte()*3if c>288then c=c-78 end c=c-95 a="0x"..Z.sub("0000D0808F6F5FAB6D5B7080690096525272120222010168F9F5F1BBD9DBE2FDDBFBB8BCFBFEAF0A01A025055505289C69D7A7FB6699F96FB9FA869BF2F9F921EF69F11FCFF8F696FA4F9EFA55BB8F8F1FE1EF3FD2DC3CBFDF9086109F4841118406F90F09F6642",c,c+2)for j=0,11 do if a&(1<<(11-j))>0then b=x+j//4+(i-1)*4 c=y+j%4 DL(b,c,b,c+1)end end end end'
+        } else {
+            small_font_function = '<br><br>DL=screen.drawLine <br>Z=string <br>function txt(x,y,t)for i=1,Z.len(t)do c=t:sub(i,i):upper():byte()*3if c>288then c=c-78 end c=c-95 a="0x"..Z.sub("0000D0808F6F5FAB6D5B7080690096525272120222010168F9F5F1BBD9DBE2FDDBFBB8BCFBFEAF0A01A025055505289C69D7A7FB6699F96FB9FA869BF2F9F921EF69F11FCFF8F696FA4F9EFA55BB8F8F1FE1EF3FD2DC3CBFDF9086109F4841118406F90F09F6642",c,c+2)for j=0,11 do if a&(1<<(11-j))>0then b=x+j//4+(i-1)*4 c=y+j%4 DL(b,c,b,c+1)end end end end'
+        }
+
+        for (let i = 0; i < shapes.length; i += 6) {
+
+            let tool_type = shapes[i+0]
+
+            if (tool_type == "small_text") {
+                final_string = final_string + small_font_function
+                break
+            }
+        }
+
         return final_string
     }
 
@@ -2176,9 +2421,9 @@ window.addEventListener("load", () =>{
         a.href= URL.createObjectURL(file);
         a.download = filename;
         a.click();
-      
+        
         URL.revokeObjectURL(a.href);
-      };
+    };
 
     function saveDataToFile() {
         if (shapes.length > 0) {
@@ -2269,6 +2514,10 @@ window.addEventListener("load", () =>{
                 }
             } else if (tool_type == "text") {
                 if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
+                    return i
+                }
+            } else if (tool_type == "small_text") {
+                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
                     return i
                 }
             }
