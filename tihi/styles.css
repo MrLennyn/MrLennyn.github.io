@@ -1,0 +1,40 @@
+/* pallete: 34, 34, 59  74, 78, 105     154, 140, 152   201, 173, 167   242, 233, 228 */
+/* 33, 37, 41   52, 58, 64   73, 80, 87   108, 117, 125   173, 181, 189   206, 212, 218*/
+/* :root {
+    --background_color: rgb(33, 37, 41);
+    --header_color: rgb(52, 58, 64);
+    --font_color: rgb(242, 233, 228);
+    --border_color: rgb(73, 80, 87);
+    --hover_color: rgb(40, 46, 52);
+} */
+
+:root {
+    --background_color: rgb(30, 30, 30);
+    --header_color: rgb(51, 51, 51);
+    --font_color: rgb(211, 210, 186);
+    --border_color: rgb(51, 51, 51);
+    --hover_color: rgb(40, 40, 40);
+}
+
+
+body {
+    background-color: var(--background_color);
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    line-height: 1.5;
+    color: var(--font_color)
+}
+
+#ti-hi {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    
+}
+
+.input_box {
+    display: flex;
+    justify-content: center;
+}

@@ -180,11 +180,6 @@ window.addEventListener("load", () =>{
                 inputTextBox.style.top = (e.offsetY + ctxOffsets.top) + 'px'
                 inputTextBox.style.left = (e.offsetX + ctxOffsets.left) + 'px'
 
-                /* inputTextBox.style.position = 'fixed'
-                inputTextBox.style.display = 'block'
-                inputTextBox.style.top = (e.offsetY + ctxOffsets.top) + 'px'
-                inputTextBox.style.left = (e.offsetX + ctxOffsets.left) + 'px' */
-
                 //this gotta be here otherwise focus() won't do the thing
                 window.setTimeout(function() {document.getElementById("inputText").focus()},0)
                 
@@ -573,10 +568,6 @@ window.addEventListener("load", () =>{
         inputTextBox.style.top = 0 + 'px'
         inputTextBox.style.left = 0 + 'px'
 
-        /* inputTextBox.style.position = 'fixed'
-        inputTextBox.style.display = 'none'
-        inputTextBox.style.top = 0 + 'px'
-        inputTextBox.style.left = 0 + 'px' */
         let text = inputTextBox.value
         if (inputTextBox.value.length > 0) {
             pushText(inputTextPos[0],inputTextPos[1],text)
@@ -1968,7 +1959,6 @@ window.addEventListener("load", () =>{
         "y": [1,3,4,6,8,11],
         "z": [1,2,3,5,6,7,8,10,11,12],
 
-        /* " !.,?:;'\"_") */
         " ": [],
         "!": [2,5,11],
         ".": [11],
@@ -1980,7 +1970,6 @@ window.addEventListener("load", () =>{
         "\"": [1,3],
         "_": [10,11,12],
 
-        /*      |-=+*<>()\/     */
         "|": [2,5,8,11],
         "-": [7,8,9],
         "=": [4,5,6,10,11,12],
@@ -1993,7 +1982,6 @@ window.addEventListener("load", () =>{
         "\\": [1,5,8,12],
         "/": [3,5,8,10],
 
-        /*     {}[]@#$%^&~     */
         "{": [2,3,4,5,7,8,11,12],
         "}": [1,2,5,6,8,9,10,11],
         "[": [1,2,4,7,10,11],
