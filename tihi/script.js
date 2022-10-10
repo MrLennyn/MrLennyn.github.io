@@ -13,8 +13,16 @@ ti_input.addEventListener("input", calculate)
 hi_input.addEventListener("input", calculate)
 expected_input.addEventListener("input", calculate)
 
+ti_input.addEventListener("focus", sele)
+hi_input.addEventListener("focus", sele)
+expected_input.addEventListener("focus", sele)
 
-function calculate() {
+function sele(e) {
+    e.target.select()
+}
+function calculate(e) {
+    
+
     var ti = ti_input.value
     var hi = hi_input.value
     var expected = expected_input.value
