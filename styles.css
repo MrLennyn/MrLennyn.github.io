@@ -272,3 +272,21 @@ p {
     margin: 5px;
     padding: 0;
 }
+
+.links_category {
+    border: solid var(--border_color);
+    padding: 30px;
+    margin: 10px;
+}
+
+.links_inner_cat {
+    padding: 30px;
+}
+
+
+
+.links_inner_cat a {
+    color: rgb(197, 178, 139);
+    text-decoration: none;
+    line-height: 2;
+}
