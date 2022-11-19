@@ -82,12 +82,12 @@ window.addEventListener("load", () =>{
 
     var bgColor = "#1e1e1e"
 
-    let redo_array = [];
-    let eraser_array = [];
+    var undo_state = []
+    var redo_state = []
 
     let tool = "line"
     let color = "#FFFFFF"
-    shapes = []; //[0]tool, [1]hex_color, [2,3,4,5]coordinates ...
+    shapes = []; //backbone of the app. Holds all shapes to do everything with
 
     let triangle_mouse = [null,null,null,null,null,null]
 
@@ -115,7 +115,6 @@ window.addEventListener("load", () =>{
         ctx.strokeRect(g_offset.x, g_offset.y, screenSizeW * pixelSize, screenSizeH * pixelSize)
     }
 
-    /* resized() */
     outputCode()
     drawGrid()
 
@@ -133,7 +132,7 @@ window.addEventListener("load", () =>{
             moving_canvas = true
         }
 
-        if (e.button != 0) { //if button isn't left mouse click, then don't do the things
+        if (e.button != 0) { // if button isn't left mouse click, then don't do the things
             return
         }
 
@@ -142,13 +141,11 @@ window.addEventListener("load", () =>{
 
         mouseDown = true;
 
-        clearRedo()
-
         if (tool != "eraser") {
-            eraser_array = [];
+            /* eraser_array = []; */
         }
 
-        if (tool == "triangle" || tool == "triangleF") { //handles both triangle and triangleF
+        if (tool == "triangle" || tool == "triangleF") { // handles both triangle and triangleF
             if (triangle_mouse[0] == null && triangle_mouse[1] == null) {
                 triangle_mouse[0] = startPixel[0]
                 triangle_mouse[1] = startPixel[1]
@@ -180,7 +177,7 @@ window.addEventListener("load", () =>{
                 inputTextBox.style.top = (e.offsetY + ctxOffsets.top) + 'px'
                 inputTextBox.style.left = (e.offsetX + ctxOffsets.left) + 'px'
 
-                //this gotta be here otherwise focus() won't do the thing
+                // this gotta be here otherwise focus() won't do the thing
                 window.setTimeout(function() {document.getElementById("inputText").focus()},0)
                 
             } else {
@@ -189,29 +186,36 @@ window.addEventListener("load", () =>{
             }
         } else if (tool == "move_shape") {
 
+            if (moving_shape_index == null) {
+                saveUndoState()
+            }
+
             // find the index of the shape under mouse, for later moving on move_shape_function()
-            moving_shape_index = find_shape(startPixel[0], startPixel[1])
+            moving_shape_index = find_shape_under_mouse(startPixel[0], startPixel[1])
 
             // We calculate a vector from the mouse position to the (x,y) position of the shape, so we can offset the moving
             // this way we 'grab' the shape from whereever we clicked, instead of making (x,y) jump to the mouse
+            
+            if (moving_shape_index !== null) {
+                let x = startPixel[0]
+                let y = startPixel[1]
+                let i = moving_shape_index
 
-            let x = startPixel[0]
-            let y = startPixel[1]
-            let i = moving_shape_index
+                let s_tool = shapes[i].tool
+                let x1 = shapes[i].x1
+                let y1 = shapes[i].y1
 
-            let s_tool = shapes[i+0]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
+                if (s_tool == "triangle" || s_tool == "triangleF") {
+                    x = x - x1
+                    y = y - y1
+                } else {
+                    x = x - x1
+                    y = y - y1
+                }
 
-            if (s_tool == "triangle" || s_tool == "triangleF") {
-                x = x - x1[0]
-                y = y - x1[1]
-            } else {
-                x = x - x1
-                y = y - y1
+                moving_shape_vector = [x, y]
             }
-
-            moving_shape_vector = [x, y]
+            
 
         } else {
             triangle_mouse = [null,null,null,null,null,null]
@@ -231,6 +235,7 @@ window.addEventListener("load", () =>{
         if (e.button != 0) { //if button isn't left mouse click, then don't do the things
             return
         }
+
 
         mouseDown = false;
 
@@ -255,7 +260,6 @@ window.addEventListener("load", () =>{
             pos = [x1,y1,x2,y2]
         }
             
-
         if (tool == "line") {
             pushLine(pos[0],pos[1],pos[2],pos[3])
         } else if (tool == "rect") {
@@ -282,66 +286,63 @@ window.addEventListener("load", () =>{
             moving_shape_index = null
         }
 
+        
         draw(e);
         outputCode()
     }
 
     function draw(e) { 
 
-        
-        //drawFilledTriangle(true,[1,1],[1,2],[1,3])
-
         clearCanvas()
         drawBackground()
         drawRefImage()
         drawGrid()
 
-        /* drawSmallText("#FFFFFF", 0, 0, "0123456789")
-        drawSmallText("#FFFFFF", 0, 5, "abcdefghijklm")
-        drawSmallText("#FFFFFF", 0, 10, "nopqrstuvwxyz")
-        drawSmallText("#FFFFFF", 0, 15, " !.,?:;'\"_")
-        drawSmallText("#FFFFFF", 0, 20, "|-=+*<>()\\/")
-        drawSmallText("#FFFFFF", 0, 25, "{}[]@#$%^&~") */
-
         innerBand = pixelSize/3
 
-        for (var i = 0; i < shapes.length; i += 6) { //[0]tool, [1]hex_color, [2,3,4,5]coordinates
-            let s_tool = shapes[i+0];
-            let s_color = shapes[i+1];
-            let x = shapes[i+2];
-            let y = shapes[i+3];
-            let w = shapes[i+4];
-            let h = shapes[i+5];
+        for (var i = 0; i < shapes.length; i++) {
+            let s_tool = shapes[i].tool;
+            let s_color = shapes[i].color;
+            let x1 = shapes[i].x1;
+            let y1 = shapes[i].y1;
+            let x2 = shapes[i].x2;
+            let y2 = shapes[i].y2;
+            let x3 = shapes[i].x3
+            let y3 = shapes[i].y3
+            let w = shapes[i].w
+            let h = shapes[i].h
+            let radius = shapes[i].radius
+            let text = shapes[i].text
 
             if (s_tool == "line") {
-                drawLine(s_color,x,y,w,h) //w,h are x2,y2
+                drawLine(s_color,x1,y1,x2,y2)
             } else if (s_tool == "rectF") {
                 ctx.fillStyle = s_color;
-                ctx.fillRect(x * pixelSize + g_offset.x, y * pixelSize + g_offset.y, w * pixelSize, h * pixelSize);
+                ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, w * pixelSize, h * pixelSize);
                 ctx.fill()
             } else if (s_tool == "rect") {
                 ctx.fillStyle = s_color;
 
-                ctx.fillRect(x * pixelSize + g_offset.x, y * pixelSize + g_offset.y, w * pixelSize, pixelSize); //top left right 
-                ctx.fillRect(x * pixelSize + g_offset.x, (y + h - 1) * pixelSize + g_offset.y, w * pixelSize, pixelSize); //bottom left right 
-                ctx.fillRect(x * pixelSize + g_offset.x, y * pixelSize + g_offset.y, pixelSize, h * pixelSize); //top left down
-                ctx.fillRect((x + w - 1)*pixelSize+g_offset.x, y * pixelSize + g_offset.y, pixelSize, h * pixelSize); //top right down
+                ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, w * pixelSize, pixelSize); //top left right 
+                ctx.fillRect(x1 * pixelSize + g_offset.x, (y1 + h - 1) * pixelSize + g_offset.y, w * pixelSize, pixelSize); //bottom left right 
+                ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, h * pixelSize); //top left down
+                ctx.fillRect((x1 + w - 1)*pixelSize+g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, h * pixelSize); //top right down
 
                 ctx.fill()
             } else if (s_tool == "triangle") { //triangles get their coords from tables instead of straight nums
-                drawLine(s_color, shapes[i+2][0], shapes[i+2][1], shapes[i+3][0], shapes[i+3][1])
-                drawLine(s_color, shapes[i+3][0], shapes[i+3][1], shapes[i+4][0], shapes[i+4][1])
-                drawLine(s_color, shapes[i+4][0], shapes[i+4][1], shapes[i+2][0], shapes[i+2][1])
+                drawLine(s_color, x1, y1, x2, y2)
+                drawLine(s_color, x2, y2, x3, y3)
+                drawLine(s_color, x3, y3, x1, y1)
             } else if (s_tool == "triangleF") {
-                drawFilledTriangle(s_color,shapes[i+2],shapes[i+3],shapes[i+4])
+                drawFilledTriangle(s_color,[x1, y1],[x2, y2],[x3, y3])
             } else if (s_tool == "circle") {
-                drawCircle(s_color, x, y, w)
+                drawCircle(s_color, x1, y1, radius)
             } else if (s_tool == "circleF") {
-                drawCircleF(s_color, x, y, w)
+                drawCircleF(s_color, x1, y1, radius)
             } else if (s_tool == "text") {
-                drawText(s_color, x-1, y-1, w) //w is text string
+                drawText(s_color, x1-1, y1-1, text) //w is text string
             } else if (s_tool == "small_text") {
-                drawSmallText(s_color, x-1, y-1, w) //w is text string
+                drawSmallText(s_color, x1-1, y1-1, text) //w is text string
             }
         }
     }
@@ -352,13 +353,14 @@ window.addEventListener("load", () =>{
             return
         }
 
-        let x = Math.floor(x1)
-        let y = Math.floor(y1)
-        let w = Math.floor(x2)
-        let h = Math.floor(y2)
 
+        x1 = Math.floor(x1)
+        y1 = Math.floor(y1)
+        x2 = Math.floor(x2)
+        y2 = Math.floor(y2)
 
-        shapes.push(tool,color,x, y, w, h)
+        saveUndoState()
+        shapes.push({"tool": tool, "color": color, "x1": x1, "y1": y1, "x2": x2, "y2": y2})
 
     }
 
@@ -368,18 +370,20 @@ window.addEventListener("load", () =>{
             return
         }
 
-        let x = Math.floor(x1)
-        let y = Math.floor(y1)
+
+        x1 = Math.floor(x1)
+        y1 = Math.floor(y1)
         let w = Math.floor(x2-x1)+1
         let h = Math.floor(y2-y1)+1
 
-        if (tool == "rect") {
+        if (tool == "rect") { //because a rect can't be 1x1 unless it's a full rect
             if (w == 1 && h == 1) {
                 return
             }
         }
 
-        shapes.push(tool,color,x, y, w, h)
+        saveUndoState()
+        shapes.push({"tool": tool, "color": color, "x1": x1, "y1": y1, "w": w, "h": h})
     }
 
     function pushTriangle(x1,y1,x2,y2,x3,y3) {
@@ -388,11 +392,17 @@ window.addEventListener("load", () =>{
             return
         }
 
-        let cord1 = [Math.floor(x1),Math.floor(y1)]
-        let cord2 = [Math.floor(x2),Math.floor(y2)]
-        let cord3 = [Math.floor(x3),Math.floor(y3)]
 
-        shapes.push(tool, color, cord1, cord2, cord3, "_")
+        x1 = Math.floor(x1)
+        y1 = Math.floor(y1)
+        x2 = Math.floor(x2)
+        y2 = Math.floor(y2)
+        x3 = Math.floor(x3)
+        y3 = Math.floor(y3)
+
+        
+        saveUndoState()
+        shapes.push({"tool": tool, "color": color, "x1": x1, "y1": y1, "x2": x2, "y2": y2, "x3": x3, "y3": y3})
     }
 
     function pushCircle(x1,y1,x2,y2) {
@@ -401,8 +411,8 @@ window.addEventListener("load", () =>{
             return
         }
 
-        let x = Math.floor(x1)
-        let y = Math.floor(y1)
+        let x = Math.floor(x1);
+        let y = Math.floor(y1);
         let r;
 
         if (x1 == x2 && y1 == y2) {
@@ -416,18 +426,23 @@ window.addEventListener("load", () =>{
         }
 
         r = Math.abs(r)
-    
-        shapes.push(tool, color, x, y, r, "_")
+        
+        saveUndoState()
+        shapes.push({"tool": tool, "color": color, "x1": x, "y1": y, "radius": r})
     }
 
     function pushText(x,y,text) {
         if (x == null || y == null) { //checking its not NaN
             return
         }
+
+        saveUndoState()
         if (small_font.checked) {
-            shapes.push("small_text", color, x, y, text, "_")
+            shapes.push({"tool": "small_text", "color": color, "x1": x, "y1": y, "text": text})
+            //shapes.push("small_text", color, x, y, text, "_")
         } else {
-            shapes.push(tool, color, x, y, text, "_")
+            shapes.push({"tool": tool, "color": color, "x1": x, "y1": y, "text": text})
+            //shapes.push(tool, color, x, y, text, "_")
         }
         
     }
@@ -922,7 +937,7 @@ window.addEventListener("load", () =>{
             ctx.fillRect((centerX + y) * pixelSize + g_offset.x + innerBand, (centerY - x) * pixelSize + g_offset.y + innerBand, innerBand, innerBand);
             ctx.fillRect((centerX - y) * pixelSize + g_offset.x + innerBand, (centerY + x) * pixelSize + g_offset.y + innerBand, innerBand, innerBand);
             ctx.fillRect((centerX - y) * pixelSize + g_offset.x + innerBand, (centerY - x) * pixelSize + g_offset.y + innerBand, innerBand, innerBand);
-            /* ctx.fillRect(x * pixelSize + g_offset.x + innerBand, y * pixelSize + g_offset.y + innerBand, innerBand, innerBand); */
+          
             if (d < 0) {
                 d = d + (4 * x) + 12;
             } else {
@@ -933,185 +948,109 @@ window.addEventListener("load", () =>{
         } while (x <= y);
     }
 
-    function cursorShapeColor(pixel) {
+    function cursorShapeColor(pixel) { 
+        //this is different from shapeColor() because it shows a specific color and not just generic cursor color
 
         let x = pixel[0]
         let y = pixel[1]
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
+        let i_found = find_shape_under_mouse(x,y)
 
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+        if (i_found !== null) {
 
-            if (insideRect(x,y,x1,y1,x2,y2)) {
-                if (tool_type == "rectF") {
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, x2 * pixelSize, y2 * pixelSize);
-                    ctx.fill()
-                    break
-                } else if (tool_type == "rect") {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                    ctx.fillStyle = color;
-    
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, x2 * pixelSize, pixelSize); //top left right 
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, (y1+y2-1) * pixelSize + g_offset.y, x2 * pixelSize, pixelSize); //bottom left right 
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, y2 * pixelSize); //top left down
-                    ctx.fillRect((x1+x2-1) * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, y2 * pixelSize); //top right down
-    
-                    ctx.fill()
-                    break
-                    }
-                }
-            } 
-            
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    drawLine(color,x1,y1,x2,y2)
-                    break
-                }
+            let tool_type = shapes[i_found].tool
+            let hex_color = shapes[i_found].color
+            let x1 = shapes[i_found].x1
+            let y1 = shapes[i_found].y1
+            let x2 = shapes[i_found].x2
+            let y2 = shapes[i_found].y2
+            let x3 = shapes[i_found].x3
+            let y3 = shapes[i_found].y3
+            let w = shapes[i_found].w
+            let h = shapes[i_found].h
+            let text = shapes[i_found].text
+            let radius = shapes[i_found].radius
+
+            if (tool_type == "rectF") {
+                ctx.fillStyle = color;
+                ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, w * pixelSize, h * pixelSize);
+                ctx.fill()
+            } else if (tool_type == "rect") {
+                ctx.fillStyle = color;
+                ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, w*pixelSize, pixelSize); //top left right 
+                ctx.fillRect(x1 * pixelSize + g_offset.x, (y1+h-1) * pixelSize + g_offset.y, w*pixelSize, pixelSize); //bottom left right 
+                ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, h*pixelSize); //top left down
+                ctx.fillRect((x1+w-1) * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, h*pixelSize); //top right down
+                ctx.fill()
+            } else if (tool_type == "line") {
+                drawLine(color,x1,y1,x2,y2)
             } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                ) {
-                    ctx.fillStyle = color;
-
-                    drawLine(color,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    drawLine(color,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    drawLine(color,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-
-                    break
-                }
+                ctx.fillStyle = color;
+                drawLine(color,x1,y1,x2,y2)
+                drawLine(color,x2,y2,x3,y3)
+                drawLine(color,x3,y3,x1,y1)
             } else if (tool_type == "triangleF") {
-                if (insideTriangle(pixel, shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    ctx.fillStyle = color;
-
-                    drawFilledTriangle(color, shapes[i+2], shapes[i+3], shapes[i+4])
-
-                    break
-                }
+                ctx.fillStyle = color;
+                drawFilledTriangle(color,[x1,y1], [x2,y2], [x3,y3])
             } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    drawCircle(color,x1,y1,x2)
-
-                    break
-                }
+                drawCircle(color,x1,y1,radius)
             } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    drawCircleF(color,x1,y1,x2)
-
-                    break
-                }
+                drawCircleF(color,x1,y1,radius)
             } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    drawText(color, x1-1, y1-1, x2)
-                    break
-                }
+                drawText(color, x1-1, y1-1, text)
             } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    drawSmallText(color, x1-1, y1-1, x2)
-                    break
-                }
+                drawSmallText(color, x1-1, y1-1, text)
             }
-            
+
         }
     }
 
-    function cursorBucketColor(pixel) {
+    function cursorBucketColor(pixel) { 
+        //this is different to other cursor colors because it highlights each and all shapes of the same color
+
         let lets_change;
 
         let x = pixel[0]
         let y = pixel[1]
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
+        let i_found = find_shape_under_mouse(x,y)
+
+        if (i_found !== null) {
             
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+            lets_change = shapes[i_found].color
 
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                        lets_change = hex_color
-                        break
-                    }
-                }
-            } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                    ) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    lets_change = hex_color
-                    break
-                }
-            }
         }
-        if (lets_change) {
-            for (let i = shapes.length; i >= 0; i -= 6) {
-                
-                let tool_type = shapes[i+0]
-                let hex_color = shapes[i+1]
-                let x1 = shapes[i+2]
-                let y1 = shapes[i+3]
-                let x2 = shapes[i+4]
-                let y2 = shapes[i+5]
 
-                if (hex_color == lets_change) {
+        if (lets_change) {
+            for (let i = shapes.length - 1; i >= 0; i--) {
+                
+                let tool_type = shapes[i].tool
+                let hex_color = shapes[i].color
+                let x1 = shapes[i].x1
+                let y1 = shapes[i].y1
+                let x2 = shapes[i].x2
+                let y2 = shapes[i].y2
+                let x3 = shapes[i].x3
+                let y3 = shapes[i].y3
+                let w = shapes[i].w
+                let h = shapes[i].h
+                let text = shapes[i].text
+                let radius = shapes[i].radius
+
+                if (hex_color.toUpperCase() == lets_change.toUpperCase()) {
         
                     if (tool_type == "rectF") {
                         ctx.fillStyle = color;
-                        ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, x2 * pixelSize, y2 * pixelSize);
+                        ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, w * pixelSize, h * pixelSize);
                         ctx.fill()
 
                     } else if (tool_type == "rect") {
                         ctx.fillStyle = color;
         
-                        ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, x2 * pixelSize, pixelSize); //top left right 
-                        ctx.fillRect(x1 * pixelSize + g_offset.x, (y1+y2-1) * pixelSize + g_offset.y, x2 * pixelSize, pixelSize); //bottom left right 
-                        ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, y2 * pixelSize); //top left down
-                        ctx.fillRect((x1+x2-1) * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, y2 * pixelSize); //top right down
+                        ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, w * pixelSize, pixelSize); //top left right 
+                        ctx.fillRect(x1 * pixelSize + g_offset.x, (y1+h-1) * pixelSize + g_offset.y, w * pixelSize, pixelSize); //bottom left right 
+                        ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, h * pixelSize); //top left down
+                        ctx.fillRect((x1+w-1) * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, h * pixelSize); //top right down
         
                         ctx.fill()
 
@@ -1121,25 +1060,25 @@ window.addEventListener("load", () =>{
                     } else if (tool_type == "triangle") {
                         ctx.fillStyle = color;
     
-                        drawLine(color,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                        drawLine(color,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                        drawLine(color,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
+                        drawLine(color,x1,y1,x2,y2)
+                        drawLine(color,x2,y2,x3,y3)
+                        drawLine(color,x3,y3,x1,y1)
 
                     } else if (tool_type == "triangleF") {
                         ctx.fillStyle = color;
     
-                        drawFilledTriangle(color,shapes[i+2], shapes[i+3], shapes[i+4])
+                        drawFilledTriangle(color,[x1,y1], [x2,y2], [x3,y3])
 
                     } else if (tool_type == "circle") {
-                        drawCircle(color,x1,y1,x2)
+                        drawCircle(color,x1,y1,radius)
 
                     } else if (tool_type == "circleF") {
-                        drawCircleF(color,x1,y1,x2)
+                        drawCircleF(color,x1,y1,radius)
 
                     } else if (tool_type == "text") {
-                        drawText(color, x1-1, y1-1, x2)
+                        drawText(color, x1-1, y1-1, text)
                     } else if (tool_type == "small_text") {
-                        drawSmallText(color, x1-1, y1-1, x2)
+                        drawSmallText(color, x1-1, y1-1, text)
                     }
                     
                 }
@@ -1152,86 +1091,77 @@ window.addEventListener("load", () =>{
         let x = pixel[0]
         let y = pixel[1]
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
+        let i_found = find_shape_under_mouse(x,y)
 
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+        if (i_found !== null) {
 
-            if (insideRect(x,y,x1,y1,x2,y2)) {
-                if (tool_type == "rectF") {
-                    ctx.fillStyle = cursorColor;
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, x2 * pixelSize, y2 * pixelSize);
-                    ctx.fill()
-                    break
-                } else if (tool_type == "rect") {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                    ctx.fillStyle = cursorColor;
-    
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, x2*pixelSize, pixelSize); //top left right 
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, (y1+y2-1) * pixelSize + g_offset.y, x2*pixelSize, pixelSize); //bottom left right 
-                    ctx.fillRect(x1 * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, y2*pixelSize); //top left down
-                    ctx.fillRect((x1+x2-1) * pixelSize + g_offset.x, y1 * pixelSize + g_offset.y, pixelSize, y2*pixelSize); //top right down
-    
-                    ctx.fill()
-                    break
-                    }
-                }
-            } 
-            
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    drawLine(cursorColor,x1,y1,x2,y2)
-                    break
-                }
+            let tool_type = shapes[i_found].tool
+            let hex_color = shapes[i_found].color
+            let x1 = shapes[i_found].x1
+            let y1 = shapes[i_found].y1
+            let x2 = shapes[i_found].x2
+            let y2 = shapes[i_found].y2
+            let x3 = shapes[i_found].x3
+            let y3 = shapes[i_found].y3
+            let w = shapes[i_found].w
+            let h = shapes[i_found].h
+            let text = shapes[i_found].text
+            let radius = shapes[i_found].radius
+
+            if (tool_type == "rectF") {
+                x1 = x1 * pixelSize + g_offset.x
+                y1 = y1 * pixelSize + g_offset.y
+                let w1 = w * pixelSize
+                let h1 = h * pixelSize
+                w = (w-1) * pixelSize
+                h = (h-1) * pixelSize
+                
+
+                ctx.fillStyle = cursorColor;
+                ctx.fillRect(x1, y1, w1, h1);
+
+                ctx.fillStyle = innerCursorColor;
+                ctx.fillRect(x1 + innerBand, y1 + innerBand, w, innerBand); //top left to right 
+                ctx.fillRect(x1 + innerBand, (y1+h) + innerBand, w, innerBand); //bottom left to right 
+                ctx.fillRect(x1 + innerBand, y1 + innerBand, innerBand, h); //top left to down
+                ctx.fillRect((x1+w) + innerBand, y1 + innerBand, innerBand, h + innerBand); //top right to down
+            } else if (tool_type == "rect") {
+                x1 = x1 * pixelSize + g_offset.x
+                y1 = y1 * pixelSize + g_offset.y
+                w = (w-1) * pixelSize
+                h = (h-1) * pixelSize
+
+                ctx.fillStyle = cursorColor;
+                ctx.fillRect(x1, y1, w, pixelSize); //top left to right 
+                ctx.fillRect(x1, (y1+h), w, pixelSize); //bottom left to right 
+                ctx.fillRect(x1, y1, pixelSize, h); //top left to down
+                ctx.fillRect((x1+w), y1, pixelSize, h+pixelSize); //top right to down
+
+                ctx.fillStyle = innerCursorColor;
+                ctx.fillRect(x1 + innerBand, y1 + innerBand, w, innerBand); //top left to right 
+                ctx.fillRect(x1 + innerBand, (y1+h) + innerBand, w, innerBand); //bottom left to right 
+                ctx.fillRect(x1 + innerBand, y1 + innerBand, innerBand, h); //top left to down
+                ctx.fillRect((x1+w) + innerBand, y1 + innerBand, innerBand, h + innerBand); //top right to down
+
+            } else if (tool_type == "line") {
+                drawLineForCursor(cursorColor,x1,y1,x2,y2)
             } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                ) {
-                    ctx.fillStyle = cursorColor;
-
-                    drawLine(cursorColor,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    drawLine(cursorColor,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    drawLine(cursorColor,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-
-                    break
-                }
+                ctx.fillStyle = cursorColor;
+                cursorTriangle([x1,y1,x2,y2,x3,y3], [x3,y3])
             } else if (tool_type == "triangleF") {
-                if (insideTriangle(pixel, shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    ctx.fillStyle = cursorColor;
-
-                    drawFilledTriangle(cursorColor,shapes[i+2], shapes[i+3], shapes[i+4])
-
-                    break
-                }
+                ctx.fillStyle = cursorColor;
+                drawFilledTriangle(cursorColor,[x1,y1], [x2,y2], [x3,y3])
             } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    drawCircle(cursorColor,x1,y1,x2)
-
-                    break
-                }
+                drawCursorCircle(cursorColor,x1,y1,radius)
             } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    drawCircleF(cursorColor,x1,y1,x2)
-
-                    break
-                }
+                drawCircleF(cursorColor,x1,y1,radius)
+                drawCursorCircle(cursorColor,x1,y1,radius)
             } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    drawText(cursorColor, x1-1, y1-1, x2)
-                    break
-                }
+                drawText(cursorColor, x1-1, y1-1, text)
             } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    drawSmallText(cursorColor, x1-1, y1-1, x2)
-                    break
-                }
+                drawSmallText(cursorColor, x1-1, y1-1, text)
             }
-            
+
         }
     }
 
@@ -1320,170 +1250,71 @@ window.addEventListener("load", () =>{
 
     }
 
-    function undo() {
-        if (eraser_array.length) {
-            let len = eraser_array.length;
-            shapes.push(eraser_array[len-6],eraser_array[len-5],eraser_array[len-4],eraser_array[len-3],eraser_array[len-2],eraser_array[len-1])
-            eraser_array.splice(len - 6, 6);
-            clearCanvas();
-            outputCode();
-            draw();
-        } else if (shapes.length) {
-            let len = shapes.length;
-            redo_array.push(shapes[len-6],shapes[len-5],shapes[len-4],shapes[len-3],shapes[len-2],shapes[len-1])
-            shapes.splice(len - 6, 6);
-            clearCanvas();
-            outputCode();
-            draw();
+    
+
+    function saveUndoState() { 
+        //saves app state for undo/redo
+
+        if (undo_state.length > 500) {
+            undo_state.shift()
         }
+
+        undo_state.push( makeArrayCopy(shapes) )
+
+        redo_state = []
+
+    }
+
+    function undo() {
+
+        if (undo_state.length <= 0) { return }
+        
+        redo_state.push( makeArrayCopy( shapes ) )
+        shapes = makeArrayCopy( undo_state[undo_state.length - 1])
+        undo_state.pop()
+
+        outputCode()
+        draw()
     }
 
     function redo() {
-        if (redo_array.length) {
-            let len = redo_array.length;
-            shapes.push(redo_array[len-6],redo_array[len-5],redo_array[len-4],redo_array[len-3],redo_array[len-2],redo_array[len-1])
-            redo_array.splice(redo_array.length - 6, 6);
-            clearCanvas();
-            outputCode();
-            draw();
-        }
+
+
+        if (redo_state.length <= 0) { return }
+
+        undo_state.push( makeArrayCopy(shapes) )
+        shapes = makeArrayCopy( redo_state[ redo_state.length - 1] )
+        redo_state.pop()
+
+        outputCode()
+        draw()
     }
 
     function shape_color_function(x, y) {
-        for (let i = shapes.length; i >= 0; i -= 6) {
-            
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
 
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    shapes[i+1] = color
-                    break
-                }
-            } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                        shapes[i+1] = color
-                        break
-                    }
-                }
-            } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    shapes[i+1] = color
-                    break
-                }
-            } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                    ) {
-                    shapes[i+1] = color
-                    break
-                }
-            } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    shapes[i+1] = color
-                    break
-                }
-            } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    shapes[i+1] = color
-                    break
-                }
-            } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    shapes[i+1] = color
-                    break
-                }
-            } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    shapes[i+1] = color
-                    break
-                }
-            } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    shapes[i+1] = color
-                    break
-                }
-            }
+        let i_found = find_shape_under_mouse(x,y)
+
+        if (i_found !== null) {
+            saveUndoState()
+            shapes[i_found].color = color
         }
     }
 
     function bucket_color_function(x, y) {
         let lets_change;
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
-            
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+        let i_found = find_shape_under_mouse(x,y)
 
-            
-
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                        lets_change = hex_color
-                        break
-                    }
-                }
-            } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                    ) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    lets_change = hex_color
-                    break
-                }
-            } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    lets_change = hex_color
-                    break
-                }
-            }
+        if (i_found !== null) {
+            lets_change = shapes[i_found].color
         }
+
         if (lets_change) {
-            for (let i = shapes.length; i >= 0; i -= 6) {
-                let hex_color = shapes[i+1]
+            saveUndoState()
+            for (let i = shapes.length - 1; i >= 0; i--) {
+                let hex_color = shapes[i].color
                 if (hex_color == lets_change) {
-                    shapes[i+1] = color
+                    shapes[i].color = color
                 }
             }
             return
@@ -1492,140 +1323,22 @@ window.addEventListener("load", () =>{
 
     function erase(x,y) {
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
-            
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+        let i_found = find_shape_under_mouse(x,y)
 
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                        eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                        shapes.splice(i, 6)
-                        break
-                    }
-                }
-            } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                    ) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    eraser_array.push(tool_type,hex_color,x1, y1, x2, y2)
-                    shapes.splice(i, 6)
-                    break
-                }
-            }
+        if (i_found !== null) {
+
+            saveUndoState()
+            shapes.splice(i_found,1)
+            
         }
     }
 
     function eyedrop_function(x,y) {
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
-            
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+        let i_found = find_shape_under_mouse(x,y)
 
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    color = hex_color
-                    break
-                }
-            } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                        color = hex_color
-                        break
-                    }
-                }
-            } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    color = hex_color
-                    break
-                }
-            } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                    ) {
-                    color = hex_color
-                    break
-                }
-            } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    color = hex_color
-                    break
-                }
-            } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    color = hex_color
-                    break
-                }
-            } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    color = hex_color
-                    break
-                }
-            } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    color = hex_color
-                    break
-                }
-            } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    color = hex_color
-                    break
-                }
-            }
+        if (i_found !== null) {
+            color = shapes[i_found].color
         }
 
         color_select.value = color
@@ -1633,140 +1346,31 @@ window.addEventListener("load", () =>{
 
     function push_back_function(x,y) {
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
+        let i_found = find_shape_under_mouse(x,y)
+
+        if (i_found !== null) {
+            //if there is no shape to push back to, do nothing
+            if (i_found <= 0) { return }
             
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
-
-            if (i <= 5) { //if there is no shape to push back to, do nothing.
-                return
-            }
-
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    swap_push_back(i)
-                    break
-                }
-            } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                        swap_push_back(i)
-                        break
-                    }
-                }
-            } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    swap_push_back(i)
-                    break
-                }
-            } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                    ) {
-                    swap_push_back(i)
-                    break
-                }
-            } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    swap_push_back(i)
-                    break
-                }
-            } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    swap_push_back(i)
-                    break
-                }
-            } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    swap_push_back(i)
-                    break
-                }
-            } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    swap_push_back(i)
-                    break
-                }
-            } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    swap_push_back(i)
-                    break
-                }
-            }
+            saveUndoState()
+            swap_push_back(i_found)
+            
         }
     }
 
     function push_forward_function(x,y) {
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
-            
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+        let i_found = find_shape_under_mouse(x,y)
 
-            if (i == shapes.length - 6) {
-                continue
-            }
+        if (i_found !== null) {
+            //if there is no shape to push forward to, do nothing
+            if (i_found < shapes.length - 1) {
 
-            if (tool_type == "line") {
-                if (insideLine(x,y,x1,y1,x2,y2)) {
-                    swap_push_forward(i)
-                    break
-                }
-            } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
-                        swap_push_forward(i)
-                        break
-                    }
-                }
-            } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    swap_push_forward(i)
-                    break
-                }
-            } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
-                    ) {
-                    swap_push_forward(i)
-                    break
-                }
-            } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
-                    swap_push_forward(i)
-                    break
-                }
-            } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
-                    swap_push_forward(i)
-                    break
-                }
-            } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
-                    swap_push_forward(i)
-                    break
-                }
-            } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
-                    swap_push_forward(i)
-                    break
-                }
-            } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
-                    swap_push_forward(i)
-                    break
-                }
+                saveUndoState()
+                swap_push_forward(i_found)
             }
         }
+
     }
 
     function move_shape_function(pixel) {
@@ -1778,69 +1382,67 @@ window.addEventListener("load", () =>{
             let y = pixel[1]
             let i = moving_shape_index
 
-            
-            
-            let s_tool = shapes[i+0]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+            let tool_type = shapes[i].tool
+            let x1 = shapes[i].x1
+            let y1 = shapes[i].y1
+            let x2 = shapes[i].x2
+            let y2 = shapes[i].y2
 
             x -= moving_shape_vector[0]
             y -= moving_shape_vector[1]
             
 
-            if (s_tool == "line") {
-                shapes[i+2] = x
-                shapes[i+3] = y
-                shapes[i+4] = x + (x2 - x1)
-                shapes[i+5] = y + (y2 - y1)
-            } else if (s_tool == "rectF") {
-                shapes[i+2] = x
-                shapes[i+3] = y
-            } else if (s_tool == "rect") {
-                shapes[i+2] = x
-                shapes[i+3] = y
-            } else if (s_tool == "triangle") { //triangles get their coords from tables instead of straight nums
-                let x1 = shapes[i+2][0]
-                let y1 = shapes[i+2][1]
-                let x2 = shapes[i+3][0]
-                let y2 = shapes[i+3][1]
-                let x3 = shapes[i+4][0]
-                let y3 = shapes[i+4][1]
+            if (tool_type == "line") {
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+                shapes[i].x2 = x + (x2 - x1)
+                shapes[i].y2 = y + (y2 - y1)
+            } else if (tool_type == "rectF") {
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+            } else if (tool_type == "rect") {
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+            } else if (tool_type == "triangle") {
+                let x1 = shapes[i].x1
+                let y1 = shapes[i].y1
+                let x2 = shapes[i].x2
+                let y2 = shapes[i].y2
+                let x3 = shapes[i].x3
+                let y3 = shapes[i].y3
 
-                shapes[i+2][0] = x
-                shapes[i+2][1] = y
-                shapes[i+3][0] = x + (x2 - x1)
-                shapes[i+3][1] = y + (y2 - y1)
-                shapes[i+4][0] = x + (x3 - x1)
-                shapes[i+4][1] = y + (y3 - y1)
-            } else if (s_tool == "triangleF") {
-                let x1 = shapes[i+2][0]
-                let y1 = shapes[i+2][1]
-                let x2 = shapes[i+3][0]
-                let y2 = shapes[i+3][1]
-                let x3 = shapes[i+4][0]
-                let y3 = shapes[i+4][1]
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+                shapes[i].x2 = x + (x2 - x1)
+                shapes[i].y2 = y + (y2 - y1)
+                shapes[i].x3 = x + (x3 - x1)
+                shapes[i].y3 = y + (y3 - y1)
+            } else if (tool_type == "triangleF") {
+                let x1 = shapes[i].x1
+                let y1 = shapes[i].y1
+                let x2 = shapes[i].x2
+                let y2 = shapes[i].y2
+                let x3 = shapes[i].x3
+                let y3 = shapes[i].y3
 
-                shapes[i+2][0] = x
-                shapes[i+2][1] = y
-                shapes[i+3][0] = x + (x2 - x1)
-                shapes[i+3][1] = y + (y2 - y1)
-                shapes[i+4][0] = x + (x3 - x1)
-                shapes[i+4][1] = y + (y3 - y1)
-            } else if (s_tool == "circle") {
-                shapes[i+2] = x
-                shapes[i+3] = y
-            } else if (s_tool == "circleF") {
-                shapes[i+2] = x
-                shapes[i+3] = y
-            } else if (s_tool == "text") {
-                shapes[i+2] = x
-                shapes[i+3] = y
-            } else if (s_tool == "small_text") {
-                shapes[i+2] = x
-                shapes[i+3] = y
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+                shapes[i].x2 = x + (x2 - x1)
+                shapes[i].y2 = y + (y2 - y1)
+                shapes[i].x3 = x + (x3 - x1)
+                shapes[i].y3 = y + (y3 - y1)
+            } else if (tool_type == "circle") {
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+            } else if (tool_type == "circleF") {
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+            } else if (tool_type == "text") {
+                shapes[i].x1 = x
+                shapes[i].y1 = y
+            } else if (tool_type == "small_text") {
+                shapes[i].x1 = x
+                shapes[i].y1 = y
             }
         } else {
             cursorShape(pixel)
@@ -1920,6 +1522,7 @@ window.addEventListener("load", () =>{
     }
 
     var small_letters = {
+        //font by alyosha
         //each one of this numbers is a square in the 3x4 grid that represents each letter. (0,0) being 1, (4,5) being 20.
         "0": [1,2,3,4,6,7,9,10,11,12],
         "1": [2,4,5,8,10,11,12],
@@ -2076,10 +1679,6 @@ window.addEventListener("load", () =>{
         return pos
     }
 
-    function clearRedo() {
-        redo_array = [];
-    }
-
     function hexToRgb(h) {
         let r = 0, g = 0, b = 0;
       
@@ -2128,15 +1727,9 @@ window.addEventListener("load", () =>{
             let colors_org = []; // colors organizer
 
             // organizing and grouping colors into tables
-            for (let i = 0; i < shapes.length; i += 6) {
+            for (let i = 0; i < shapes.length; i++) {
 
-                let tool_type = shapes[i+0]
-
-                let hex_color = shapes[i+1].toUpperCase()
-                let x1 = shapes[i+2]
-                let y1 = shapes[i+3]
-                let x2 = shapes[i+4]
-                let y2 = shapes[i+5]
+                let hex_color = shapes[i].color.toUpperCase()
 
                 let found_color = false
                 //scane the whole colors_org table, and if not found, then we create it
@@ -2155,7 +1748,7 @@ window.addEventListener("load", () =>{
                 //push color into colors_org when not found inside the table
                 for (let a = 0; a < colors_org.length; a++) {
                     if (colors_org[a][0] == hex_color) {
-                        colors_org[a].push(tool_type, hex_color, x1, y1, x2, y2)
+                        colors_org[a].push(shapes[i])
                         break
                     }
                 }
@@ -2163,17 +1756,8 @@ window.addEventListener("load", () =>{
 
             // pushing grouped colors into output_shapes
             for (let i = 0; i < colors_org.length; i++) {
-                for (let a = 1; a < colors_org[i].length; a += 6) {
-                    let tool_type = colors_org[i][a+0]
-
-                    let hex_color = colors_org[i][a+1]
-
-                    let x1 = colors_org[i][a+2]
-                    let y1 = colors_org[i][a+3]
-                    let x2 = colors_org[i][a+4]
-                    let y2 = colors_org[i][a+5]
-
-                    output_shapes.push(tool_type, hex_color, x1, y1, x2, y2)
+                for (let a = 1; a < colors_org[i].length; a++) {
+                    output_shapes.push(colors_org[i][a])
                 }
             }
 
@@ -2208,8 +1792,10 @@ window.addEventListener("load", () =>{
             small_text_string = "txt(";
 
             let to_add = []
-            for (let i = 0; i < output_shapes.length; i += 6) {
-                let tool_type = output_shapes[i+0]
+            for (let i = 0; i < output_shapes.length; i++) {
+
+                let tool_type = output_shapes[i].tool
+                
                 if (tool_type == "line" && !inString("DL=S.drawLine", to_add)) {
                     to_add.push("DL=S.drawLine")
                 } else if (tool_type == "rect" && !inString("DR=S.drawRect", to_add)) {
@@ -2260,18 +1846,21 @@ window.addEventListener("load", () =>{
             small_text_string = "txt(";
         }
 
-        for (let i = 0; i < output_shapes.length; i += 6) {
+        for (let i = 0; i < output_shapes.length; i++) {
             
 
-            let tool_type = output_shapes[i+0]
-            let hex_color = output_shapes[i+1]
-            let x1 = output_shapes[i+2]
-            let y1 = output_shapes[i+3]
-            let x2 = output_shapes[i+4]
-            let y2 = output_shapes[i+5]
-            let ty1 = output_shapes[i+2][1] //y's for triangleF
-            let ty2 = output_shapes[i+3][1]
-            let ty3 = output_shapes[i+4][1]
+            let tool_type = output_shapes[i].tool
+            let hex_color = output_shapes[i].color
+            let x1 = output_shapes[i].x1
+            let y1 = output_shapes[i].y1
+            let x2 = output_shapes[i].x2
+            let y2 = output_shapes[i].y2
+            let x3 = output_shapes[i].x3
+            let y3 = output_shapes[i].y3
+            let w = output_shapes[i].w
+            let h = output_shapes[i].h
+            let radius = output_shapes[i].radius
+            let text = output_shapes[i].text
 
 
             if (hex_color !== last_color) {
@@ -2295,63 +1884,59 @@ window.addEventListener("load", () =>{
                 }
             } else if (tool_type == "rect") {
                 if (function_mode.checked) {
-                    tool_string = rect_string + x1 + "+x," + y1 + "+y," + (x2-1) + "," + (y2-1) + ")"
+                    tool_string = rect_string + x1 + "+x," + y1 + "+y," + (w-1) + "," + (h-1) + ")"
                 } else {
-                    tool_string = rect_string + x1 + "," + y1 + "," + (x2-1) + "," + (y2-1) + ")"
+                    tool_string = rect_string + x1 + "," + y1 + "," + (w-1) + "," + (h-1) + ")"
                 }
             } else if (tool_type == "rectF") {
                 if (shapeF_fix.checked) {
-                    y1 = y1 + 0.5
+                    y1 += 0.5
                 }
                 if (function_mode.checked) {
-                    tool_string = rectF_string + x1 + "+x," + y1 + "+y," + x2 + "," + y2 + ")"
+                    tool_string = rectF_string + x1 + "+x," + y1 + "+y," + w + "," + h + ")"
                 } else {
-                    tool_string = rectF_string + x1 + "," + y1 + "," + x2 + "," + y2 + ")"
+                    tool_string = rectF_string + x1 + "," + y1 + "," + w + "," + h + ")"
                 }
             } else if (tool_type == "triangle") {
                 if (function_mode.checked) {
-                    tool_string = triangle_string + output_shapes[i+2][0] + "+x" + "," + output_shapes[i+2][1] + "+y" + "," + //continues down
-                    output_shapes[i+3][0] + "+x" + "," + output_shapes[i+3][1] + "+y" + "," + output_shapes[i+4][0] + "+x" + "," + output_shapes[i+4][1] + "+y" + ")"
+                    tool_string = triangle_string + x1 + "+x" + "," + y1 + "+y" + "," +  x2 + "+x" + "," + y2 + "+y" + "," + x3 + "+x" + "," + y3 + "+y" + ")"
                 } else {
-                    tool_string = triangle_string + output_shapes[i+2][0] + "," + output_shapes[i+2][1] + "," + //continues down
-                    output_shapes[i+3][0] + "," + output_shapes[i+3][1] + "," + output_shapes[i+4][0] + "," + output_shapes[i+4][1] + ")"
+                    tool_string = triangle_string + x1 + "," + y1 + "," + x2 + "," + y2 + "," + x3 + "," + y3 + ")"
                 }
             } else if (tool_type == "triangleF") {
                 if (shapeF_fix.checked) {
-                    ty1 += 0.5
-                    ty2 += 0.5
-                    ty3 += 0.5
+                    y1 += 0.5
+                    y2 += 0.5
+                    y3 += 0.5
                 }
                 if (function_mode.checked) {
-                    tool_string = triangleF_string + output_shapes[i+2][0] + "+x" + "," + ty1 + "+y" + "," + //continues down
-                    output_shapes[i+3][0] + "+x" + "," + ty2 + "+y" + "," + output_shapes[i+4][0] + "+x" + "," + ty3 + "+y" + ")"
+                    tool_string = triangleF_string + x1 + "+x" + "," + y1 + "+y" + "," + x2 + "+x" + "," + y2 + "+y" + "," + x3 + "+x" + "," + y3 + "+y" + ")"
                 } else {
-                    tool_string = triangleF_string + output_shapes[i+2][0] + "," + ty1 + "," + //continues down
-                    output_shapes[i+3][0] + "," + ty2 + "," + output_shapes[i+4][0] + "," + ty3 + ")"
+                    tool_string = triangleF_string + x1 + "," + y1 + "," + x2 + "," + y2 + "," + x3 + "," + y3 + ")"
                 }
             } else if (tool_type == "circle") {
                 if (function_mode.checked) {
-                    tool_string = circle_string + x1 + "+x," + y1 + "+y," + x2 + ")"
+                    tool_string = circle_string + x1 + "+x," + y1 + "+y," + radius + ")"
                 } else {
-                    tool_string = circle_string + x1 + "," + y1 + "," + x2 + ")"
+                    tool_string = circle_string + x1 + "," + y1 + "," + radius + ")"
                 }
             } else if (tool_type == "circleF") {
                 if (function_mode.checked) {
-                    tool_string = circleF_string + x1 + "+x," + y1 + "+y," + x2 + ")"
+                    tool_string = circleF_string + x1 + "+x," + y1 + "+y," + radius + ")"
                 } else {
-                    tool_string = circleF_string + x1 + "," + y1 + "," + x2 + ")"
+                    tool_string = circleF_string + x1 + "," + y1 + "," + radius + ")"
                 }
-            } else if (tool_type == "text") { //x2 is text
+            } else if (tool_type == "text") {
                 if (function_mode.checked) {
-                    tool_string = text_string + x1 + "+x," + y1 + "+y," + "\"" + x2 + "\"" + ")"
+                    tool_string = text_string + x1 + "+x," + y1 + "+y," + "\"" + text + "\"" + ")"
                 } else {
-                    tool_string = text_string + x1 + "," + y1 + "," + "\"" + x2 + "\"" + ")"
+                    tool_string = text_string + x1 + "," + y1 + "," + "\"" + text + "\"" + ")"
                 }
-            } else if (tool_type == "small_text") { //x2 is text
+            } else if (tool_type == "small_text") {
                 if (function_mode.checked) {
-                    tool_string = small_text_string + x1 + "+x," + y1 + "+y," + "\"" + x2 + "\"" + ")"
+                    tool_string = small_text_string + x1 + "+x," + y1 + "+y," + "\"" + text + "\"" + ")"
                 } else {
-                    tool_string = small_text_string + x1 + "," + y1 + "," + "\"" + x2 + "\"" + ")"
+                    tool_string = small_text_string + x1 + "," + y1 + "," + "\"" + text + "\"" + ")"
                 }
             }
             final_string = final_string + tool_string + "<br>"
@@ -2364,8 +1949,10 @@ window.addEventListener("load", () =>{
         let small_font_function
         let found_line = false
         if (compact.checked) {
-            for (let i = 0; i < shapes.length; i += 6) {
-                let tool_type = shapes[i+0]
+            for (let i = 0; i < shapes.length; i++) {
+
+                let tool_type = shapes[i].tool
+
                 if (tool_type == "line") {
                     found_line = true
                     small_font_function = '<br><br>Z=string <br>'
@@ -2380,9 +1967,9 @@ window.addEventListener("load", () =>{
             small_font_function = '<br><br>DL=screen.drawLine <br>Z=string <br>function txt(x,y,t)for i=1,Z.len(t)do c=t:sub(i,i):upper():byte()*3if c>288then c=c-78 end c=c-95 a="0x"..Z.sub("0000D0808F6F5FAB6D5B7080690096525272120222010168F9F5F1BBD9DBE2FDDBFBB8BCFBFEAF0A01A025055505289C69D7A7FB6699F96FB9FA869BF2F9F921EF69F11FCFF8F696FA4F9EFA55BB8F8F1FE1EF3FD2DC3CBFDF9086109F4841118406F90F09F6642",c,c+2)for j=0,11 do if a&(1<<(11-j))>0then b=x+j//4+(i-1)*4 c=y+j%4 DL(b,c,b,c+1)end end end end'
         }
 
-        for (let i = 0; i < shapes.length; i += 6) {
+        for (let i = 0; i < shapes.length; i++) {
 
-            let tool_type = shapes[i+0]
+            let tool_type = shapes[i].tool
 
             if (tool_type == "small_text") {
                 final_string = final_string + small_font_function
@@ -2430,7 +2017,6 @@ window.addEventListener("load", () =>{
         fr.onload=function(){
             shapes = []
             shapes = JSON.parse(fr.result)
-            clearRedo()
             draw()
             outputCode()
         }
@@ -2456,60 +2042,69 @@ window.addEventListener("load", () =>{
 
     resized()
 
-    function find_shape(x,y) {
+    function find_shape_under_mouse(x,y) {
 
-        for (let i = shapes.length; i >= 0; i -= 6) {
+        for (let i = shapes.length - 1; i >= 0; i--) {
             
-            let tool_type = shapes[i+0]
-            let hex_color = shapes[i+1]
-            let x1 = shapes[i+2]
-            let y1 = shapes[i+3]
-            let x2 = shapes[i+4]
-            let y2 = shapes[i+5]
+            let tool_type = shapes[i].tool
+            let hex_color = shapes[i].color
+            let x1 = shapes[i].x1
+            let y1 = shapes[i].y1
+            let x2 = shapes[i].x2
+            let y2 = shapes[i].y2
+            let x3 = shapes[i].x3
+            let y3 = shapes[i].y3
+            let w = shapes[i].w
+            let h = shapes[i].h
+            let radius = shapes[i].radius
+            let text = shapes[i].text
 
             if (tool_type == "line") {
                 if (insideLine(x,y,x1,y1,x2,y2)) {
                     return i
                 }
             } else if (tool_type == "rect") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
-                    if (!insideRect(x,y,x1+1,y1+1,x2-2,y2-2)) {
+                if (insideRect(x,y,x1,y1,w,h)) {
+                    if (!insideRect(x,y,x1+1,y1+1,w-2,h-2)) {
                         return i
                     }
                 }
             } else if (tool_type == "rectF") {
-                if (insideRect(x,y,x1,y1,x2,y2)) {
+                if (insideRect(x,y,x1,y1,w,h)) {
                     return i
                 }
             } else if (tool_type == "triangle") {
-                if (insideLine(x,y,shapes[i+2][0],shapes[i+2][1],shapes[i+3][0],shapes[i+3][1])
-                    || insideLine(x,y,shapes[i+3][0],shapes[i+3][1],shapes[i+4][0],shapes[i+4][1])
-                    || insideLine(x,y,shapes[i+4][0],shapes[i+4][1],shapes[i+2][0],shapes[i+2][1])
+                if (insideLine(x,y,x1,y1,x2,y2)
+                    || insideLine(x,y,x2,y2,x3,y3)
+                    || insideLine(x,y,x3,y3,x1,y1)
                     ) {
                         return i
                 }
             } else if (tool_type == "triangleF") {
-                if (insideTriangle([x,y], shapes[i+2], shapes[i+3], shapes[i+4])) {
+                if (insideTriangle([x,y], [x1,y1],[x2,y2],[x3,y3])) {
                     return i
                 }
             } else if (tool_type == "circle") {
-                if (insideCircle(x,y,x1,y1,x2)) {
+                if (insideCircle(x,y,x1,y1,radius)) {
                     return i
                 }
             } else if (tool_type == "circleF") {
-                if (insideCircleF(x,y,x1,y1,x2)) {
+                if (insideCircleF(x,y,x1,y1,radius)) {
                     return i
                 }
             } else if (tool_type == "text") {
-                if (insideRect(x,y,x1,y1,x2.length*5-1,5)) {
+                if (insideRect(x,y,x1,y1,text.length*5-1,5)) {
                     return i
                 }
             } else if (tool_type == "small_text") {
-                if (insideRect(x,y,x1,y1,x2.length*4-1,4)) {
+                if (insideRect(x,y,x1,y1,text.length*4-1,4)) {
                     return i
                 }
             }
         }
+
+        return null
+
     }
 
     function color_factor_change() {
@@ -2681,61 +2276,32 @@ function insideCircleF(x, y, centerX, centerY, radius) {
 }
 
 function swap_push_back(i) {
-    let tool_type = shapes[i+0]
-    let hex_color = shapes[i+1]
-    let x1 = shapes[i+2]
-    let y1 = shapes[i+3]
-    let x2 = shapes[i+4]
-    let y2 = shapes[i+5]
 
-    let b_tool_type = shapes[i+0-6] //these represent the values of the shape before (that we're going to push forward)
-    let b_hex_color = shapes[i+1-6]
-    let b_x1 = shapes[i+2-6]
-    let b_y1 = shapes[i+3-6]
-    let b_x2 = shapes[i+4-6]
-    let b_y2 = shapes[i+5-6]
+    let a = shapes[i-1]
+    let b = shapes[i]
 
-    shapes[i+0-6] = tool_type
-    shapes[i+1-6] = hex_color
-    shapes[i+2-6] = x1
-    shapes[i+3-6] = y1
-    shapes[i+4-6] = x2
-    shapes[i+5-6] = y2
-
-    shapes[i+0] = b_tool_type
-    shapes[i+1] = b_hex_color
-    shapes[i+2] = b_x1
-    shapes[i+3] = b_y1
-    shapes[i+4] = b_x2
-    shapes[i+5] = b_y2
+    shapes[i-1] = b
+    shapes[i] = a
 }
 
 function swap_push_forward(i) {
-    let tool_type = shapes[i+0]
-    let hex_color = shapes[i+1]
-    let x1 = shapes[i+2]
-    let y1 = shapes[i+3]
-    let x2 = shapes[i+4]
-    let y2 = shapes[i+5]
 
-    let b_tool_type = shapes[i+0+6] //these represent the values of the shape before (that we're going to push back)
-    let b_hex_color = shapes[i+1+6]
-    let b_x1 = shapes[i+2+6]
-    let b_y1 = shapes[i+3+6]
-    let b_x2 = shapes[i+4+6]
-    let b_y2 = shapes[i+5+6]
+    let a = shapes[i]
+    let b = shapes[i+1]
 
-    shapes[i+0+6] = tool_type
-    shapes[i+1+6] = hex_color
-    shapes[i+2+6] = x1
-    shapes[i+3+6] = y1
-    shapes[i+4+6] = x2
-    shapes[i+5+6] = y2
+    shapes[i] = b
+    shapes[i+1] = a
+}
 
-    shapes[i+0] = b_tool_type
-    shapes[i+1] = b_hex_color
-    shapes[i+2] = b_x1
-    shapes[i+3] = b_y1
-    shapes[i+4] = b_x2
-    shapes[i+5] = b_y2
+function makeArrayCopy(arr) {
+
+    if (!arr) { return null }
+    return JSON.parse(JSON.stringify(arr))
+
+    /* let a = []
+    if (!arr) { return a }
+    for (i=0; i < arr.length; i++) {
+        a.push(arr[i])
+    }
+    return a */
 }
