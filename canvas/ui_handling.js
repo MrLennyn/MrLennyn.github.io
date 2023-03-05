@@ -83,6 +83,28 @@ function resized() {
 
 resized()
 
+// Input number Ctrl + Z prevention (it also prevents ctrl+z on the whole DOM)
+
+let ctrlDown = false
+let ctrlKey = 17
+let zKey = 90
+
+document.body.onkeydown = function(e) {
+    if (e.keyCode == 17 || e.keyCode == 91) {
+        ctrlDown = true;
+    }
+    if (ctrlDown && e.keyCode == zKey) {
+        e.preventDefault()
+        return false
+    }
+}
+
+document.body.onkeyup = function(e) {
+    if (e.keyCode == 17 || e.keyCode == 91) {
+        ctrlDown = false
+    }
+}
+
 // Helpers
 function getOffset(el, offset) {
     var rect = el.getBoundingClientRect();

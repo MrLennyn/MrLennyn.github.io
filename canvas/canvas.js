@@ -1,6 +1,6 @@
 // Drawing Canvas for Stormworks Lua "Screen" API
 
-// Feel free to use or modify any part of this script, but contact me before, if posible.
+// Feel free to use or modify any part of this script, but if you can, let me know .
 
 // Made by Mr Lennyn
 
@@ -20,6 +20,7 @@ window.addEventListener("load", () =>{
     const grid_checkbox = document.getElementById("grid")
     const screen_select = document.getElementById("screen")
     const color_select = document.getElementById("color")
+    const alpha_input = document.getElementById("alpha_input")
     const hide_image_checkbox = document.getElementById("img_hide")
 
     const undo_button = document.getElementById("undo")
@@ -87,6 +88,8 @@ window.addEventListener("load", () =>{
 
     let tool = "line"
     let color = "#FFFFFF"
+    let alpha_value = 255
+
     shapes = []; //backbone of the app. Holds all shapes to do everything with
 
     let triangle_mouse = [null,null,null,null,null,null]
@@ -293,6 +296,8 @@ window.addEventListener("load", () =>{
 
     function draw(e) { 
 
+        ctx.globalAlpha = 1
+
         clearCanvas()
         drawBackground()
         drawRefImage()
@@ -303,6 +308,7 @@ window.addEventListener("load", () =>{
         for (var i = 0; i < shapes.length; i++) {
             let s_tool = shapes[i].tool;
             let s_color = shapes[i].color;
+            let s_alpha = shapes[i].alpha;
             let x1 = shapes[i].x1;
             let y1 = shapes[i].y1;
             let x2 = shapes[i].x2;
@@ -313,6 +319,8 @@ window.addEventListener("load", () =>{
             let h = shapes[i].h
             let radius = shapes[i].radius
             let text = shapes[i].text
+
+            ctx.globalAlpha = s_alpha/255
 
             if (s_tool == "line") {
                 drawLine(s_color,x1,y1,x2,y2)
@@ -360,7 +368,7 @@ window.addEventListener("load", () =>{
         y2 = Math.floor(y2)
 
         saveUndoState()
-        shapes.push({"tool": tool, "color": color, "x1": x1, "y1": y1, "x2": x2, "y2": y2})
+        shapes.push({"tool": tool, "color": color, "alpha": alpha_value, "x1": x1, "y1": y1, "x2": x2, "y2": y2})
 
     }
 
@@ -376,14 +384,14 @@ window.addEventListener("load", () =>{
         let w = Math.floor(x2-x1)+1
         let h = Math.floor(y2-y1)+1
 
-        if (tool == "rect") { //because a rect can't be 1x1 unless it's a full rect
+        if (tool == "rect") { //prevent, because a rect can't be 1x1 unless it's a full rect
             if (w == 1 && h == 1) {
                 return
             }
         }
 
         saveUndoState()
-        shapes.push({"tool": tool, "color": color, "x1": x1, "y1": y1, "w": w, "h": h})
+        shapes.push({"tool": tool, "color": color, "alpha": alpha_value, "x1": x1, "y1": y1, "w": w, "h": h})
     }
 
     function pushTriangle(x1,y1,x2,y2,x3,y3) {
@@ -402,7 +410,7 @@ window.addEventListener("load", () =>{
 
         
         saveUndoState()
-        shapes.push({"tool": tool, "color": color, "x1": x1, "y1": y1, "x2": x2, "y2": y2, "x3": x3, "y3": y3})
+        shapes.push({"tool": tool, "color": color, "alpha": alpha_value, "x1": x1, "y1": y1, "x2": x2, "y2": y2, "x3": x3, "y3": y3})
     }
 
     function pushCircle(x1,y1,x2,y2) {
@@ -428,7 +436,7 @@ window.addEventListener("load", () =>{
         r = Math.abs(r)
         
         saveUndoState()
-        shapes.push({"tool": tool, "color": color, "x1": x, "y1": y, "radius": r})
+        shapes.push({"tool": tool, "color": color, "alpha": alpha_value, "x1": x, "y1": y, "radius": r})
     }
 
     function pushText(x,y,text) {
@@ -438,11 +446,9 @@ window.addEventListener("load", () =>{
 
         saveUndoState()
         if (small_font.checked) {
-            shapes.push({"tool": "small_text", "color": color, "x1": x, "y1": y, "text": text})
-            //shapes.push("small_text", color, x, y, text, "_")
+            shapes.push({"tool": "small_text", "color": color, "alpha": alpha_value, "x1": x, "y1": y, "text": text})
         } else {
-            shapes.push({"tool": tool, "color": color, "x1": x, "y1": y, "text": text})
-            //shapes.push(tool, color, x, y, text, "_")
+            shapes.push({"tool": tool, "color": color, "alpha": alpha_value, "x1": x, "y1": y, "text": text})
         }
         
     }
@@ -463,6 +469,7 @@ window.addEventListener("load", () =>{
 
 
     color_select.addEventListener("change",changeColor);
+    alpha_input.addEventListener("change",changeAlpha);
     undo_button.addEventListener("click",undo);
     redo_button.addEventListener("click",redo);
     line_shape.addEventListener("click",changeTool);
@@ -602,7 +609,7 @@ window.addEventListener("load", () =>{
         for (let step = 0; step < the_line.length; step++) {
             let x = the_line[step][0]
             let y = the_line[step][1]
-            /* ctx.fillRect(x * pixelSize + g_offset.x, y * pixelSize + g_offset.y, pixelSize + 1, pixelSize + 1); */
+            
             ctx.fillRect(x * pixelSize + g_offset.x, y * pixelSize + g_offset.y, pixelSize, pixelSize);
         }
     }
@@ -723,6 +730,7 @@ window.addEventListener("load", () =>{
     function cursor(e) {
 
         
+
         if (moving_canvas) {
             drag_end = [e.offsetX, e.offsetY]
             g_offset.x += drag_end[0] - drag_start[0]
@@ -736,7 +744,7 @@ window.addEventListener("load", () =>{
 
         let pixel = [Math.floor(e.offsetX / pixelSize - g_offset.x / pixelSize), Math.floor(e.offsetY / pixelSize - g_offset.y / pixelSize)];
         
-        
+        ctx.globalAlpha = 1
 
         if (!mouseDown) {
             // Pixel Cursor
@@ -1009,6 +1017,7 @@ window.addEventListener("load", () =>{
         //this is different to other cursor colors because it highlights each and all shapes of the same color
 
         let lets_change;
+        let lets_change_alpha;
 
         let x = pixel[0]
         let y = pixel[1]
@@ -1018,6 +1027,7 @@ window.addEventListener("load", () =>{
         if (i_found !== null) {
             
             lets_change = shapes[i_found].color
+            lets_change_alpha = shapes[i_found].alpha
 
         }
 
@@ -1026,6 +1036,7 @@ window.addEventListener("load", () =>{
                 
                 let tool_type = shapes[i].tool
                 let hex_color = shapes[i].color
+                let alpha_color = shapes[i].alpha
                 let x1 = shapes[i].x1
                 let y1 = shapes[i].y1
                 let x2 = shapes[i].x2
@@ -1037,7 +1048,7 @@ window.addEventListener("load", () =>{
                 let text = shapes[i].text
                 let radius = shapes[i].radius
 
-                if (hex_color.toUpperCase() == lets_change.toUpperCase()) {
+                if (hex_color.toUpperCase() == lets_change.toUpperCase() && alpha_color == lets_change_alpha) {
         
                     if (tool_type == "rectF") {
                         ctx.fillStyle = color;
@@ -1207,6 +1218,15 @@ window.addEventListener("load", () =>{
         color = e.target.value
     }
 
+    function changeAlpha(e) {
+        if (e.target.value < 0) {
+            e.target.value = 0
+        } else if (e.target.value > 255) {
+            e.target.value = 255
+        }
+        alpha_value = e.target.value
+    }
+
     function clearCanvas() { //draws the big background plane
         //ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = bgColor;
@@ -1297,24 +1317,29 @@ window.addEventListener("load", () =>{
         if (i_found !== null) {
             saveUndoState()
             shapes[i_found].color = color
+            shapes[i_found].alpha = alpha_value
         }
     }
 
     function bucket_color_function(x, y) {
         let lets_change;
+        let lets_change_alpha;
 
         let i_found = find_shape_under_mouse(x,y)
 
         if (i_found !== null) {
             lets_change = shapes[i_found].color
+            lets_change_alpha = shapes[i_found].alpha
         }
 
         if (lets_change) {
             saveUndoState()
             for (let i = shapes.length - 1; i >= 0; i--) {
                 let hex_color = shapes[i].color
-                if (hex_color == lets_change) {
+                let alpha_color = shapes[i].alpha
+                if (hex_color == lets_change && alpha_color == lets_change_alpha) {
                     shapes[i].color = color
+                    shapes[i].alpha = alpha_value
                 }
             }
             return
@@ -1339,8 +1364,10 @@ window.addEventListener("load", () =>{
 
         if (i_found !== null) {
             color = shapes[i_found].color
+            alpha_value = shapes[i_found].alpha
+            alpha_input.value = shapes[i_found].alpha
         }
-
+        
         color_select.value = color
     }
 
@@ -1730,11 +1757,13 @@ window.addEventListener("load", () =>{
             for (let i = 0; i < shapes.length; i++) {
 
                 let hex_color = shapes[i].color.toUpperCase()
+                let alpha_color = shapes[i].alpha
 
                 let found_color = false
-                //scane the whole colors_org table, and if not found, then we create it
+
+                //scan the whole colors_org table, and if not found, then we create it
                 for (let a = 0; a < colors_org.length; a++) {
-                    if (colors_org[a][0] == hex_color) {
+                    if (colors_org[a][0] == hex_color && colors_org[a][1] == alpha_color) {
                         found_color = true
                         break
                     }
@@ -1742,12 +1771,12 @@ window.addEventListener("load", () =>{
                 }
                 if (!found_color) {
                     found_color = true
-                    colors_org.push([hex_color])
+                    colors_org.push([hex_color, alpha_color])
                 }
 
                 //push color into colors_org when not found inside the table
                 for (let a = 0; a < colors_org.length; a++) {
-                    if (colors_org[a][0] == hex_color) {
+                    if (colors_org[a][0] == hex_color && colors_org[a][1] == alpha_color) {
                         colors_org[a].push(shapes[i])
                         break
                     }
@@ -1755,8 +1784,8 @@ window.addEventListener("load", () =>{
             }
 
             // pushing grouped colors into output_shapes
-            for (let i = 0; i < colors_org.length; i++) {
-                for (let a = 1; a < colors_org[i].length; a++) {
+            for (let i = 0; i < colors_org.length; i++) { // !!!
+                for (let a = 2; a < colors_org[i].length; a++) {
                     output_shapes.push(colors_org[i][a])
                 }
             }
@@ -1769,6 +1798,7 @@ window.addEventListener("load", () =>{
         let final_string = "";
         let tool_string = "";
         let last_color = "";
+        let last_alpha = "";
 
         let set_color_string = "";
         let line_string = "";
@@ -1847,10 +1877,10 @@ window.addEventListener("load", () =>{
         }
 
         for (let i = 0; i < output_shapes.length; i++) {
-            
 
             let tool_type = output_shapes[i].tool
             let hex_color = output_shapes[i].color
+            let alpha_color = output_shapes[i].alpha
             let x1 = output_shapes[i].x1
             let y1 = output_shapes[i].y1
             let x2 = output_shapes[i].x2
@@ -1863,17 +1893,37 @@ window.addEventListener("load", () =>{
             let text = output_shapes[i].text
 
 
-            if (hex_color !== last_color) {
+            if (hex_color !== last_color || alpha_color !== last_alpha) {
+
                 let color_string = ""
+
                 if (making_copy) {
-                    color_string = set_color_string + hexToRgb(hex_color) + ")"
+                    if (alpha_color < 255) {
+                        color_string = set_color_string + hexToRgb(hex_color) + "," + alpha_color + ")"
+                    } else {
+                        color_string = set_color_string + hexToRgb(hex_color) + ")"
+                    }
                 } else {
-                    let color_flag = "<po style='user-select: none; background-color: " + hex_color + "; color: " + hex_color + "'>_____ </po>"
-                    color_string = set_color_string + hexToRgb(hex_color) + ")" + color_flag
+                    let color_flag;
+                    
+                    if (alpha_color < 255) {
+
+                        color_flag = "<po style='user-select: none; background-color: " + hex_color + "; color: " + 
+                            hex_color + "'>_____ </po>" + "<po style='user-select: none;'> * </po>"
+
+                        color_string = set_color_string + hexToRgb(hex_color) + "," + alpha_color + ")" + color_flag
+                    } else {
+
+                        color_flag = "<po style='user-select: none; background-color: " + hex_color + "; color: " + 
+                            hex_color + "'>_____ </po>"
+
+                        color_string = set_color_string + hexToRgb(hex_color) + ")" + color_flag
+                    }
                 }
                 
                 final_string = final_string + color_string + "<br>"
                 last_color = hex_color;
+                last_alpha = alpha_color;
             }
 
             if (tool_type == "line") {
@@ -1955,16 +2005,16 @@ window.addEventListener("load", () =>{
 
                 if (tool_type == "line") {
                     found_line = true
-                    small_font_function = '<br><br>Z=string <br>'
+                    small_font_function = ""
                     break
                 }
             }
             if (!found_line) {
-                small_font_function = '<br><br>DL=S.drawLine<br>Z=string<br>'
+                small_font_function = '<br><br>DL=S.drawLine<br>'
             }
-            small_font_function += 'function txt(x,y,t)for i=1,Z.len(t)do c=t:sub(i,i):upper():byte()*3if c>288then c=c-78 end c=c-95 a="0x"..Z.sub("0000D0808F6F5FAB6D5B7080690096525272120222010168F9F5F1BBD9DBE2FDDBFBB8BCFBFEAF0A01A025055505289C69D7A7FB6699F96FB9FA869BF2F9F921EF69F11FCFF8F696FA4F9EFA55BB8F8F1FE1EF3FD2DC3CBFDF9086109F4841118406F90F09F6642",c,c+2)for j=0,11 do if a&(1<<(11-j))>0then b=x+j//4+(i-1)*4 c=y+j%4 DL(b,c,b,c+1)end end end end'
+            small_font_function += '<br>function txt(x,y,t)t=tostring(t)for i=1,t:len()do local c=t:sub(i,i):upper():byte()*3-95if c>193then c=c-78 end c="0x"..string.sub("0000D0808F6F5FAB6D5B7080690096525272120222010168F9F5F1BBD9DBE2FDDBFBB8BCFBFEAF0A01A025055505289C69D7A7FB6699F96FB9FA869BF2F9F921EF69F11FCFF8F696FA4F9EFA55BB8F8F1FE1EF3FD2DC3CBFDF9086109F4841118406F90F09F6642",c,c+2)for j=0,11 do if c&(1<<(11-j))>0then local b=x+j//4+i*4-4 DL(b,y+j%4,b,y+j%4+1)end end end end'
         } else {
-            small_font_function = '<br><br>DL=screen.drawLine <br>Z=string <br>function txt(x,y,t)for i=1,Z.len(t)do c=t:sub(i,i):upper():byte()*3if c>288then c=c-78 end c=c-95 a="0x"..Z.sub("0000D0808F6F5FAB6D5B7080690096525272120222010168F9F5F1BBD9DBE2FDDBFBB8BCFBFEAF0A01A025055505289C69D7A7FB6699F96FB9FA869BF2F9F921EF69F11FCFF8F696FA4F9EFA55BB8F8F1FE1EF3FD2DC3CBFDF9086109F4841118406F90F09F6642",c,c+2)for j=0,11 do if a&(1<<(11-j))>0then b=x+j//4+(i-1)*4 c=y+j%4 DL(b,c,b,c+1)end end end end'
+            small_font_function = '<br><br>DL=screen.drawLine <br>function txt(x,y,t)t=tostring(t)for i=1,t:len()do local c=t:sub(i,i):upper():byte()*3-95if c>193then c=c-78 end c="0x"..string.sub("0000D0808F6F5FAB6D5B7080690096525272120222010168F9F5F1BBD9DBE2FDDBFBB8BCFBFEAF0A01A025055505289C69D7A7FB6699F96FB9FA869BF2F9F921EF69F11FCFF8F696FA4F9EFA55BB8F8F1FE1EF3FD2DC3CBFDF9086109F4841118406F90F09F6642",c,c+2)for j=0,11 do if c&(1<<(11-j))>0then local b=x+j//4+i*4-4 DL(b,y+j%4,b,y+j%4+1)end end end end'
         }
 
         for (let i = 0; i < shapes.length; i++) {
@@ -2297,11 +2347,4 @@ function makeArrayCopy(arr) {
 
     if (!arr) { return null }
     return JSON.parse(JSON.stringify(arr))
-
-    /* let a = []
-    if (!arr) { return a }
-    for (i=0; i < arr.length; i++) {
-        a.push(arr[i])
-    }
-    return a */
 }

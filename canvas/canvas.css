@@ -119,11 +119,27 @@ a:hover {
     height: 25px;
 }
 
+#alpha_input {
+    padding: 4;
+    padding-left: 25px;
+    padding-bottom: 5px;
+    margin: 0;
+    margin-bottom: 4px;
+    width: 45px;
+    height: 17px;
+    border-radius: 0px 0px 12px 12px;
+    border: solid;
+    border-style: unset;
+    align-content: center;
+}
+
 #color {
     border: 0px solid var(--border_color);
+    border-radius: 5px 5px 0px 0px;
     width: 74px;
-    height: 35px;
-    margin: 2px 0px 2px 0px;
+    height: 39px;
+    padding: 4px;
+    margin: 4px 0px 0px 0px;
 }
 
 #save_load {
@@ -265,14 +281,11 @@ a:hover {
 }
 
 #inputText {
-    /* display: none; */
-    /* background-color: rgb(241, 241, 241); */
     color: black;
     border-left: 2px solid var(--border_color);
     padding: 0;
     margin: 0;
     position: fixed;
-    /* width: 150px; */
     top: 120px;
     left: 120px;
 }
